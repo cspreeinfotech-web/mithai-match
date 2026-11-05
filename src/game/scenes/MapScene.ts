@@ -5,6 +5,8 @@ import { regenerateLives } from '../../core';
 import { loadProfile, saveProfile, spendCoins, addBooster, useBooster } from '../../services/profile';
 import { t } from '../../services/i18n';
 import { makeButton, makeModalOverlay, THEME } from '../ui';
+import { billing } from '../../services/billing';
+import { getProduct } from '../../config/products.config';
 
 const NODE_SPACING_Y = 110;
 const ZIGZAG_X = 90;
@@ -178,11 +180,18 @@ export class MapScene extends Phaser.Scene {
       }
     }, { fontSize: '18px' });
 
-    // Real-money IAP for this is wired in Phase 6 (Google Play Billing); for now it's a
-    // visible, honest placeholder rather than a fake "purchase".
-    const buyIap = makeButton(this, 0, 30, `${t('buyLives', lang)} (IAP — coming soon)`, () => {
-      this.showToast('In-app purchases land in Phase 6');
-    }, { fontSize: '16px', bg: '#8a7c63' });
+    const buyIap = makeButton(this, 0, 30, `${t('buyLives', lang)} (${billing.getLocalizedPrice('lives_refill_5') ?? '₹' + getProduct('lives_refill_5')!.fallbackPriceInr})`, async () => {
+      const outcome = await billing.purchase('lives_refill_5');
+      if (outcome.kind === 'granted') {
+        overlay.destroy();
+        panel.destroy();
+        this.scene.restart();
+      } else if (outcome.kind === 'error') {
+        this.showToast(outcome.message);
+      } else if (outcome.kind === 'pending') {
+        this.showToast('Purchase pending — check back soon');
+      }
+    }, { fontSize: '16px' });
 
     const profile = loadProfile();
     const remainingMs = Math.max(0, ECONOMY.lifeRegenMinutes * 60_000 - (Date.now() - profile.livesUpdatedAt));

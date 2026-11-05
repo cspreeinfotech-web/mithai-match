@@ -3,6 +3,7 @@ import { APP_NAME } from '../../config/app.config';
 import { loadProfile, saveProfile } from '../../services/profile';
 import { t } from '../../services/i18n';
 import { makeButton, THEME } from '../ui';
+import { billing } from '../../services/billing';
 
 
 export class SettingsScene extends Phaser.Scene {
@@ -49,8 +50,9 @@ export class SettingsScene extends Phaser.Scene {
     });
 
     y += 20;
-    makeButton(this, width / 2, y, t('restorePurchases', lang), () => {
-      this.showToast('Restore purchases is wired in Phase 6 (real billing)');
+    makeButton(this, width / 2, y, t('restorePurchases', lang), async () => {
+      await billing.restorePurchases();
+      this.showToast('Purchases restored');
     }, { fontSize: '18px' });
     y += 64;
 

@@ -13,3 +13,5 @@ export type { LifeState } from './economy';
 export { validateLevel, validateAllLevels } from './levelValidator';
 export { canClaimDaily, claimDaily } from './daily';
 export type { DailyClaimState, DailyClaimResult } from './daily';
+export { purchaseReducer, INITIAL_PURCHASE_STATE, enqueuePendingGrant, dequeuePendingGrant } from './purchaseState';
+export type { PurchaseState, PurchaseStatus, PurchaseEvent, PendingGrant } from './purchaseState';

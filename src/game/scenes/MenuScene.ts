@@ -48,7 +48,8 @@ export class MenuScene extends Phaser.Scene {
     );
 
     makeButton(this, width / 2, height * 0.62, `🏪 ${t('shop', lang)}`, () => this.scene.start('Shop'), { fontSize: '22px' });
-    makeButton(this, width / 2, height * 0.7, `⚙ ${t('settings', lang)}`, () => this.scene.start('Settings'), { fontSize: '22px' });
+    makeButton(this, width / 2, height * 0.7, '🪙 Store', () => this.scene.start('Store'), { fontSize: '22px' });
+    makeButton(this, width / 2, height * 0.78, `⚙ ${t('settings', lang)}`, () => this.scene.start('Settings'), { fontSize: '22px' });
   }
 
   private showDailyRewardPopup(): void {

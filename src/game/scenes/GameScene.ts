@@ -12,15 +12,20 @@ import {
   applyGravity,
   refill,
   shuffleBoard,
+  continuePrice,
   type Board,
   type LevelConfig,
   type Tile,
   type GoalProgress,
 } from '../../core';
 import { getLevel } from '../../levels';
-import { loadProfile, recordLevelWin, spendLife, useBooster } from '../../services/profile';
+import { loadProfile, recordLevelWin, spendLife, useBooster, spendCoins } from '../../services/profile';
 import { syncLevelWin } from '../../services/cloudSync';
-import { t } from '../../services/i18n';
+import { billing } from '../../services/billing';
+import { ECONOMY } from '../../config/economy.config';
+import { ENABLE_ADS } from '../../config/app.config';
+import { getProduct } from '../../config/products.config';
+import { makeButton, THEME } from '../ui';
 import {
   generateGameTextures,
   SWEET_TEXTURE_KEY,
@@ -62,6 +67,7 @@ export class GameScene extends Phaser.Scene {
   private hammerArmed = false;
   private extraMoves = 0;
   private extraStriped = false;
+  private continuesUsed = 0;
 
   constructor() {
     super('Game');
@@ -87,6 +93,7 @@ export class GameScene extends Phaser.Scene {
     this.inputLocked = false;
     this.selected = null;
     this.hammerArmed = false;
+    this.continuesUsed = 0;
 
     const { width, height } = this.scale;
     const availableWidth = width - 40;
@@ -534,77 +541,150 @@ export class GameScene extends Phaser.Scene {
     const profile = loadProfile();
     recordLevelWin(profile, this.levelConfig.id, stars, coins);
     void syncLevelWin(this.levelConfig.id, this.score, stars);
-    this.showEndPopup(true, stars, coins);
+    this.showWinPopup(stars, coins);
   }
 
   private onFail(): void {
-    const profile = loadProfile();
-    spendLife(profile);
-    this.showEndPopup(false, 0, 0);
+    // Game state (board, score, moves) is already frozen — inputLocked stays true and
+    // nothing in attemptSwap/animate* runs again until this popup resolves one way or
+    // another, including while a purchase is in flight or the app is backgrounded.
+    this.showOutOfMovesPopup();
   }
 
-  private showEndPopup(won: boolean, stars: number, coins: number): void {
+  private showWinPopup(stars: number, coins: number): void {
     const { width, height } = this.scale;
     const overlay = this.add.rectangle(0, 0, width, height, 0x000000, 0.75).setOrigin(0, 0).setInteractive();
     const panel = this.add.container(width / 2, height / 2);
 
     const title = this.add
-      .text(0, -80, won ? 'Level Complete!' : 'Out of Moves', {
-        fontFamily: 'sans-serif',
-        fontSize: '36px',
-        color: won ? '#ffd27a' : '#ff8a80',
-      })
+      .text(0, -80, 'Level Complete!', { fontFamily: 'sans-serif', fontSize: '36px', color: '#ffd27a' })
       .setOrigin(0.5);
-    panel.add(title);
+    const starsText = this.add.text(0, -20, '⭐'.repeat(stars) + '☆'.repeat(3 - stars), { fontSize: '40px' }).setOrigin(0.5);
+    const coinsText = this.add
+      .text(0, 30, `+${coins} coins`, { fontFamily: 'sans-serif', fontSize: '26px', color: '#ffffff' })
+      .setOrigin(0.5);
 
-    if (won) {
-      const starsText = this.add
-        .text(0, -20, '⭐'.repeat(stars) + '☆'.repeat(3 - stars), { fontSize: '40px' })
-        .setOrigin(0.5);
-      const coinsText = this.add
-        .text(0, 30, `+${coins} coins`, { fontFamily: 'sans-serif', fontSize: '26px', color: '#ffffff' })
-        .setOrigin(0.5);
-      panel.add([starsText, coinsText]);
-    } else {
-      const scoreText = this.add
-        .text(0, 0, `Score: ${this.score}`, { fontFamily: 'sans-serif', fontSize: '24px', color: '#ffffff' })
-        .setOrigin(0.5);
-      panel.add(scoreText);
-    }
-
-    const buttonLabel = won ? 'NEXT' : 'RETRY';
     const button = this.add
-      .text(0, 90, buttonLabel, {
-        fontFamily: 'sans-serif',
-        fontSize: '28px',
-        color: '#1a0f08',
-        backgroundColor: '#ffb84d',
-        padding: { x: 36, y: 12 },
-      })
+      .text(0, 90, 'NEXT', { fontFamily: 'sans-serif', fontSize: '28px', color: '#1a0f08', backgroundColor: '#ffb84d', padding: { x: 36, y: 12 } })
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
     button.on('pointerdown', () => {
-      if (won) {
-        const nextLevel = this.levelConfig.id + 1;
-        if (getLevel(nextLevel)) {
-          this.scene.restart({ levelId: nextLevel });
-        } else {
-          this.scene.start('Menu');
-        }
-      } else {
-        this.scene.restart({ levelId: this.levelConfig.id });
-      }
+      const nextLevel = this.levelConfig.id + 1;
+      if (getLevel(nextLevel)) this.scene.restart({ levelId: nextLevel });
+      else this.scene.start('Menu');
     });
-    panel.add(button);
 
     const quit = this.add
       .text(0, 150, 'Back to menu', { fontFamily: 'sans-serif', fontSize: '20px', color: '#cccccc' })
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
     quit.on('pointerdown', () => this.scene.start('Menu'));
-    panel.add(quit);
 
+    panel.add([title, starsText, coinsText, button, quit]);
     void overlay; // keeps the backdrop referenced (blocks board input beneath it)
+  }
+
+  /** Out-of-moves fail flow (spec section 5.1): continue with coins (price escalates, capped
+   *  at 3 uses this attempt), continue via direct IAP, a "get coins" shortcut into the Store
+   *  that returns here with the board preserved, or give up (spends a life, back to map). */
+  private showOutOfMovesPopup(): void {
+    const { width, height } = this.scale;
+    const overlay = this.add.rectangle(0, 0, width, height, 0x000000, 0.75).setOrigin(0, 0).setInteractive();
+    const panel = this.add.container(width / 2, height / 2);
+
+    const title = this.add
+      .text(0, -150, 'Out of Moves', { fontFamily: 'sans-serif', fontSize: '34px', color: '#ff8a80' })
+      .setOrigin(0.5);
+    const scoreText = this.add
+      .text(0, -105, `Score: ${this.score}`, { fontFamily: 'sans-serif', fontSize: '20px', color: '#ffffff' })
+      .setOrigin(0.5);
+    panel.add([title, scoreText]);
+
+    const price = continuePrice(this.continuesUsed + 1);
+    const profile = loadProfile();
+
+    if (price !== null) {
+      const canAfford = profile.coins >= price;
+      const coinBtn = makeButton(
+        this,
+        0,
+        -50,
+        canAfford ? `Continue: +5 moves (${price} 🪙)` : `Need ${price - profile.coins} more 🪙`,
+        () => (canAfford ? this.continueWithCoins(price, overlay, panel) : this.openStoreShortcut(overlay, panel)),
+        { fontSize: '18px', bg: canAfford ? THEME.buttonBg : THEME.disabledBg },
+      );
+      panel.add(coinBtn);
+    }
+
+    const iapPrice = billing.getLocalizedPrice('continue_moves_5') ?? `₹${getProduct('continue_moves_5')!.fallbackPriceInr}`;
+    const iapBtn = makeButton(this, 0, 10, `Buy +5 moves (${iapPrice})`, () => this.continueWithIap(overlay, panel), { fontSize: '18px' });
+    panel.add(iapBtn);
+
+    if (ENABLE_ADS) {
+      const adBtn = makeButton(this, 0, 70, 'Watch ad for +3 moves', () => this.showToast('Ads land once ENABLE_ADS is turned on'), {
+        fontSize: '16px',
+        bg: '#8a7c63',
+      });
+      panel.add(adBtn);
+    }
+
+    const giveUp = this.add
+      .text(0, ENABLE_ADS ? 130 : 100, 'Give up', { fontFamily: 'sans-serif', fontSize: '20px', color: '#cccccc' })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+    giveUp.on('pointerdown', () => {
+      const current = loadProfile();
+      spendLife(current);
+      overlay.destroy();
+      panel.destroy();
+      this.scene.start('Map');
+    });
+    panel.add(giveUp);
+  }
+
+  private continueWithCoins(price: number, overlay: Phaser.GameObjects.Rectangle, panel: Phaser.GameObjects.Container): void {
+    const profile = loadProfile();
+    const spent = spendCoins(profile, price);
+    if (!spent) {
+      this.showToast('Not enough coins');
+      return;
+    }
+    this.continuesUsed += 1;
+    this.applyContinueMoves(overlay, panel);
+  }
+
+  private async continueWithIap(overlay: Phaser.GameObjects.Rectangle, panel: Phaser.GameObjects.Container): Promise<void> {
+    const outcome = await billing.purchase('continue_moves_5');
+    if (outcome.kind === 'granted') {
+      this.applyContinueMoves(overlay, panel);
+    } else if (outcome.kind === 'error') {
+      this.showToast(outcome.message);
+    } else if (outcome.kind === 'pending') {
+      this.showToast('Purchase pending — check back soon');
+    }
+    // 'cancelled' and 'already_owned' need no message — the popup just stays open.
+  }
+
+  private applyContinueMoves(overlay: Phaser.GameObjects.Rectangle, panel: Phaser.GameObjects.Container): void {
+    this.movesRemaining += ECONOMY.continueMovesGranted;
+    overlay.destroy();
+    panel.destroy();
+    this.refreshHud();
+    this.inputLocked = false;
+    this.resetIdleTimer();
+  }
+
+  /** "Get coins" shortcut: opens the Store with the frozen attempt preserved, so coming back
+   *  (via the Store's own back button) returns the player to this same out-of-moves popup. */
+  private openStoreShortcut(overlay: Phaser.GameObjects.Rectangle, panel: Phaser.GameObjects.Container): void {
+    overlay.destroy();
+    panel.destroy();
+    this.scene.pause();
+    this.scene.launch('Store', { overlay: true });
+    this.scene.get('Store').events.once('shutdown', () => {
+      this.scene.resume();
+      this.showOutOfMovesPopup();
+    });
   }
 
   /** Called from the Android hardware back button (see src/main.ts). */

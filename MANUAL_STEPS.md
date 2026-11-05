@@ -70,9 +70,36 @@ unless you later upgrade). Two ways to unblock this:
 
 See `supabase/README.md` for the full command reference.
 
+## Phase 6 — Billing: create these exact 6 products in Play Console
+
+Billing code (`src/services/billing/`) is written and works end-to-end against **MockBilling**
+(verified in-browser — purchasing credits coins instantly). It can't be tested against **real**
+Google Play Billing from here (no Play Console access, no physical device signed into a test
+account), so treat `RealBillingProvider` as carefully-written-but-device-unverified until you
+try it on Internal Testing.
+
+Once you have a Play Console app (see the Phase 7 section below), go to **Monetize → Products →
+In-app products → Create product** and create exactly these 6, **all as one-time, consumable
+products** (the IDs must match `src/config/products.config.ts` exactly):
+
+| Product ID | What it grants |
+|---|---|
+| `coins_300` | 300 coins |
+| `coins_900` | 900 coins |
+| `coins_2200` | 2,200 coins |
+| `coins_5500` | 5,500 coins |
+| `lives_refill_5` | Full 5 lives instantly |
+| `continue_moves_5` | +5 moves on the current level |
+
+Set whatever prices you like in Play Console — the app reads the real localized price from
+Google Play at runtime (`src/services/billing/realBilling.ts`'s `getLocalizedPrice`), falling
+back to the placeholder in `products.config.ts` only until that loads. After creating each
+one, click **Activate**. Also add yourself as a **license tester** (**Setup → License testing**)
+so you can test purchases without being charged real money.
+
 ## Later phases (placeholders — filled in as those phases land)
 
-- **Google Play Console**: creating the app, uploading the first AAB to Internal testing, creating the 6 in-app products, adding license testers.
+- **Google Play Console**: creating the app, uploading the first AAB to Internal testing, adding license testers (see Phase 6 above for the 6 products specifically).
 - **Release keystore**: generate it yourself (`keytool`) and add it + 3 passwords as 4 GitHub Actions secrets (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`). I will never generate or hold this keystore for you — back it up yourself; losing it means you can never update the app on Play again (unless you're on Play App Signing, which is why you should opt into it).
 - **Hosting the privacy policy** at a public URL and filling in the Data Safety form / content rating.
 - **Changing the application ID / app name / icon** away from the placeholder `com.example.mithaimatch`.
