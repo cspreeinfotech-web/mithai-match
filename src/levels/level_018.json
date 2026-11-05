@@ -1,0 +1,36 @@
+{
+  "id": 18,
+  "width": 8,
+  "height": 8,
+  "moves": 24,
+  "goals": [
+    {
+      "type": "collect",
+      "target": 29,
+      "sweet": "laddu"
+    }
+  ],
+  "blockers": [
+    {
+      "row": 2,
+      "col": 1,
+      "type": "locked"
+    },
+    {
+      "row": 3,
+      "col": 2,
+      "type": "locked"
+    },
+    {
+      "row": 4,
+      "col": 3,
+      "type": "locked"
+    }
+  ],
+  "ingredients": [],
+  "starThresholds": [
+    3900,
+    4800
+  ],
+  "seed": 1666
+}

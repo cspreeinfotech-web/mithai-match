@@ -1,0 +1,31 @@
+{
+  "id": 22,
+  "width": 8,
+  "height": 8,
+  "moves": 23,
+  "goals": [
+    {
+      "type": "collect",
+      "target": 31,
+      "sweet": "rasgulla"
+    }
+  ],
+  "blockers": [
+    {
+      "row": 0,
+      "col": 0,
+      "type": "ice2"
+    },
+    {
+      "row": 7,
+      "col": 7,
+      "type": "honey"
+    }
+  ],
+  "ingredients": [],
+  "starThresholds": [
+    4420,
+    5440
+  ],
+  "seed": 1814
+}

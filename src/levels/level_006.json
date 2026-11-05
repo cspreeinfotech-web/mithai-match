@@ -1,0 +1,26 @@
+{
+  "id": 6,
+  "width": 8,
+  "height": 8,
+  "moves": 28,
+  "goals": [
+    {
+      "type": "collect",
+      "target": 23,
+      "sweet": "laddu"
+    }
+  ],
+  "blockers": [
+    {
+      "row": 1,
+      "col": 2,
+      "type": "ice1"
+    }
+  ],
+  "ingredients": [],
+  "starThresholds": [
+    2340,
+    2880
+  ],
+  "seed": 1222
+}

@@ -1,0 +1,35 @@
+{
+  "id": 8,
+  "width": 8,
+  "height": 8,
+  "moves": 28,
+  "goals": [
+    {
+      "type": "score",
+      "target": 980
+    }
+  ],
+  "blockers": [
+    {
+      "row": 1,
+      "col": 2,
+      "type": "ice1"
+    },
+    {
+      "row": 2,
+      "col": 3,
+      "type": "ice1"
+    },
+    {
+      "row": 3,
+      "col": 4,
+      "type": "ice1"
+    }
+  ],
+  "ingredients": [],
+  "starThresholds": [
+    1274,
+    1568
+  ],
+  "seed": 1296
+}

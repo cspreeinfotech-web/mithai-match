@@ -1,0 +1,61 @@
+{
+  "id": 46,
+  "width": 8,
+  "height": 8,
+  "moves": 15,
+  "goals": [
+    {
+      "type": "collect",
+      "target": 43,
+      "sweet": "rasgulla"
+    }
+  ],
+  "blockers": [
+    {
+      "row": 0,
+      "col": 0,
+      "type": "ice2"
+    },
+    {
+      "row": 1,
+      "col": 3,
+      "type": "ice1"
+    },
+    {
+      "row": 2,
+      "col": 6,
+      "type": "ice2"
+    },
+    {
+      "row": 3,
+      "col": 1,
+      "type": "ice1"
+    },
+    {
+      "row": 3,
+      "col": 1,
+      "type": "locked"
+    },
+    {
+      "row": 4,
+      "col": 2,
+      "type": "locked"
+    },
+    {
+      "row": 5,
+      "col": 3,
+      "type": "locked"
+    },
+    {
+      "row": 7,
+      "col": 7,
+      "type": "honey"
+    }
+  ],
+  "ingredients": [],
+  "starThresholds": [
+    7540,
+    9280
+  ],
+  "seed": 2702
+}

@@ -1,0 +1,19 @@
+{
+  "id": 1,
+  "width": 8,
+  "height": 8,
+  "moves": 30,
+  "goals": [
+    {
+      "type": "score",
+      "target": 950
+    }
+  ],
+  "blockers": [],
+  "ingredients": [],
+  "starThresholds": [
+    1235,
+    1520
+  ],
+  "seed": 1037
+}

@@ -1,0 +1,41 @@
+{
+  "id": 14,
+  "width": 8,
+  "height": 8,
+  "moves": 26,
+  "goals": [
+    {
+      "type": "collect",
+      "target": 27,
+      "sweet": "gulabjamun"
+    }
+  ],
+  "blockers": [
+    {
+      "row": 0,
+      "col": 0,
+      "type": "ice1"
+    },
+    {
+      "row": 1,
+      "col": 2,
+      "type": "ice2"
+    },
+    {
+      "row": 2,
+      "col": 4,
+      "type": "ice1"
+    },
+    {
+      "row": 3,
+      "col": 6,
+      "type": "ice2"
+    }
+  ],
+  "ingredients": [],
+  "starThresholds": [
+    3380,
+    4160
+  ],
+  "seed": 1518
+}

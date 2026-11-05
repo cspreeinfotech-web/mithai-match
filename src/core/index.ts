@@ -1,3 +1,12 @@
 // Entry point for the pure-TS game logic module (no Phaser dependency).
-// Board, matching, cascades, specials, level rules and economy land here in Phase 2.
-export const CORE_VERSION = '0.1.0';
+export const CORE_VERSION = '0.2.0';
+
+export * from './types';
+export { Rng } from './rng';
+export { findMatches, hasAnyMatch } from './match';
+export { generateBoard, applyGravity, refill, shuffleBoard, hasValidMove, countIce } from './board';
+export { resolveSwap } from './cascade';
+export { initGoalProgress, applyStepToGoals, allGoalsMet, calculateStars } from './levelRules';
+export { coinsForWin, continuePrice, regenerateLives, millisUntilNextLife } from './economy';
+export type { LifeState } from './economy';
+export { validateLevel, validateAllLevels } from './levelValidator';

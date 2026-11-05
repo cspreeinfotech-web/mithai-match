@@ -1,0 +1,39 @@
+{
+  "id": 20,
+  "width": 8,
+  "height": 8,
+  "moves": 24,
+  "goals": [
+    {
+      "type": "drop-ingredients",
+      "target": 2
+    }
+  ],
+  "blockers": [
+    {
+      "row": 0,
+      "col": 0,
+      "type": "ice2"
+    },
+    {
+      "row": 7,
+      "col": 7,
+      "type": "honey"
+    }
+  ],
+  "ingredients": [
+    {
+      "row": 0,
+      "col": 4
+    },
+    {
+      "row": 0,
+      "col": 3
+    }
+  ],
+  "starThresholds": [
+    4160,
+    5120
+  ],
+  "seed": 1740
+}

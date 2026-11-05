@@ -1,0 +1,60 @@
+{
+  "id": 47,
+  "width": 9,
+  "height": 8,
+  "moves": 15,
+  "goals": [
+    {
+      "type": "score",
+      "target": 3320
+    }
+  ],
+  "blockers": [
+    {
+      "row": 0,
+      "col": 0,
+      "type": "ice2"
+    },
+    {
+      "row": 1,
+      "col": 3,
+      "type": "ice1"
+    },
+    {
+      "row": 2,
+      "col": 6,
+      "type": "ice2"
+    },
+    {
+      "row": 3,
+      "col": 0,
+      "type": "ice1"
+    },
+    {
+      "row": 3,
+      "col": 1,
+      "type": "locked"
+    },
+    {
+      "row": 4,
+      "col": 2,
+      "type": "locked"
+    },
+    {
+      "row": 5,
+      "col": 3,
+      "type": "locked"
+    },
+    {
+      "row": 7,
+      "col": 8,
+      "type": "honey"
+    }
+  ],
+  "ingredients": [],
+  "starThresholds": [
+    4316,
+    5312
+  ],
+  "seed": 2739
+}

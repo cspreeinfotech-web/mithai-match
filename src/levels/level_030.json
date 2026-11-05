@@ -1,0 +1,55 @@
+{
+  "id": 30,
+  "width": 8,
+  "height": 8,
+  "moves": 20,
+  "goals": [
+    {
+      "type": "collect",
+      "target": 35,
+      "sweet": "laddu"
+    }
+  ],
+  "blockers": [
+    {
+      "row": 0,
+      "col": 0,
+      "type": "ice2"
+    },
+    {
+      "row": 1,
+      "col": 3,
+      "type": "ice1"
+    },
+    {
+      "row": 2,
+      "col": 6,
+      "type": "ice2"
+    },
+    {
+      "row": 3,
+      "col": 1,
+      "type": "locked"
+    },
+    {
+      "row": 7,
+      "col": 7,
+      "type": "honey"
+    }
+  ],
+  "ingredients": [
+    {
+      "row": 0,
+      "col": 4
+    },
+    {
+      "row": 0,
+      "col": 3
+    }
+  ],
+  "starThresholds": [
+    5460,
+    6720
+  ],
+  "seed": 2110
+}
