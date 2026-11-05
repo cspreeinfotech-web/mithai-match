@@ -194,13 +194,13 @@ function countIngredientsOnBottomRow(board: Board): Pos[] {
  * is reproducible given the same board+seed.
  */
 export function resolveSwap(board: Board, a: Pos, b: Pos, rng: Rng): SwapResult {
-  if (!isAdjacent(a, b)) return { valid: false, steps: [], totalScore: 0, boardAfter: board };
+  if (!isAdjacent(a, b)) return { valid: false, steps: [], totalScore: 0, boardAfter: board, shuffled: false };
 
   const working = cloneBoard(board);
   const tileA = working.cells[a.row]![a.col];
   const tileB = working.cells[b.row]![b.col];
   if (!tileA || !tileB || tileA.blocker === 'locked' || tileB.blocker === 'locked') {
-    return { valid: false, steps: [], totalScore: 0, boardAfter: board };
+    return { valid: false, steps: [], totalScore: 0, boardAfter: board, shuffled: false };
   }
 
   const combo = comboClearCells(working, a, b);
@@ -218,15 +218,23 @@ export function resolveSwap(board: Board, a: Pos, b: Pos, rng: Rng): SwapResult 
     cleared.forEach((c) => touchedByClearing.add(`${c.row},${c.col}`));
     const scoreGained = cleared.length * BASE_SCORE_PER_TILE * multiplier;
     totalScore += scoreGained;
-    steps.push({ cleared, specialsCreated: [], multiplier, scoreGained, ingredientsDropped: 0, iceCleared });
     applyGravity(working);
     refill(working, rng);
+    steps.push({
+      cleared,
+      specialsCreated: [],
+      multiplier,
+      scoreGained,
+      ingredientsDropped: 0,
+      iceCleared,
+      boardAfterStep: cloneBoard(working),
+    });
     multiplier++;
   } else {
     // A normal swap must create a match by itself, or it's invalid (bounce back).
     const immediate = findMatches(working);
     if (immediate.length === 0) {
-      return { valid: false, steps: [], totalScore: 0, boardAfter: board };
+      return { valid: false, steps: [], totalScore: 0, boardAfter: board, shuffled: false };
     }
   }
 
@@ -255,24 +263,34 @@ export function resolveSwap(board: Board, a: Pos, b: Pos, rng: Rng): SwapResult 
 
     const scoreGained = cleared.length * BASE_SCORE_PER_TILE * multiplier;
     totalScore += scoreGained;
-    steps.push({ cleared, specialsCreated, multiplier, scoreGained, ingredientsDropped: 0, iceCleared });
 
     applyGravity(working);
 
+    let ingredientsDropped = 0;
     const droppedIngredients = countIngredientsOnBottomRow(working);
     if (droppedIngredients.length > 0) {
-      steps[steps.length - 1]!.ingredientsDropped = droppedIngredients.length;
+      ingredientsDropped = droppedIngredients.length;
       for (const { row, col } of droppedIngredients) working.cells[row]![col] = null;
       applyGravity(working);
     }
 
     refill(working, rng);
+    steps.push({
+      cleared,
+      specialsCreated,
+      multiplier,
+      scoreGained,
+      ingredientsDropped,
+      iceCleared,
+      boardAfterStep: cloneBoard(working),
+    });
     multiplier++;
   }
 
   growHoney(working, touchedByClearing, rng);
 
-  if (!hasValidMove(working)) shuffleBoard(working, rng);
+  const shuffled = !hasValidMove(working);
+  if (shuffled) shuffleBoard(working, rng);
 
-  return { valid: true, steps, totalScore, boardAfter: working };
+  return { valid: true, steps, totalScore, boardAfter: working, shuffled };
 }

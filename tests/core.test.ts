@@ -239,6 +239,7 @@ describe('goal tracking and stars', () => {
       scoreGained: 150,
       ingredientsDropped: 0,
       iceCleared: 0,
+      boardAfterStep: board,
     });
     expect(allGoalsMet(progress)).toBe(true);
   });
@@ -257,6 +258,7 @@ describe('goal tracking and stars', () => {
       scoreGained: 20,
       ingredientsDropped: 0,
       iceCleared: 0,
+      boardAfterStep: board,
     });
     expect(progress[0]!.current).toBe(1);
   });

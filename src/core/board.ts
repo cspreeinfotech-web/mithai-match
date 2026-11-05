@@ -28,13 +28,22 @@ function swapCreatesMatch(board: Board, a: { row: number; col: number }, b: { ro
 }
 
 export function hasValidMove(board: Board): boolean {
+  return findAnyValidMove(board) !== null;
+}
+
+/** Finds one legal swap, for the "pulse a valid move" hint after idle time. */
+export function findAnyValidMove(board: Board): { a: { row: number; col: number }; b: { row: number; col: number } } | null {
   for (let row = 0; row < board.height; row++) {
     for (let col = 0; col < board.width; col++) {
-      if (col + 1 < board.width && swapCreatesMatch(board, { row, col }, { row, col: col + 1 })) return true;
-      if (row + 1 < board.height && swapCreatesMatch(board, { row, col }, { row: row + 1, col })) return true;
+      if (col + 1 < board.width && swapCreatesMatch(board, { row, col }, { row, col: col + 1 })) {
+        return { a: { row, col }, b: { row, col: col + 1 } };
+      }
+      if (row + 1 < board.height && swapCreatesMatch(board, { row, col }, { row: row + 1, col })) {
+        return { a: { row, col }, b: { row: row + 1, col } };
+      }
     }
   }
-  return false;
+  return null;
 }
 
 /** Builds a level's starting board: no pre-existing match, and at least one legal move. */

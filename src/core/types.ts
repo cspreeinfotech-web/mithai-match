@@ -62,6 +62,9 @@ export interface CascadeStep {
   scoreGained: number;
   ingredientsDropped: number;
   iceCleared: number;
+  /** Board state once this step's clear + gravity + refill has settled, for the renderer
+   *  to animate toward one step at a time. */
+  boardAfterStep: Board;
 }
 
 export interface SwapResult {
@@ -69,4 +72,7 @@ export interface SwapResult {
   steps: CascadeStep[];
   totalScore: number;
   boardAfter: Board;
+  /** True if the board had no legal move after settling and was auto-reshuffled
+   *  ("No moves — shuffling!"). */
+  shuffled: boolean;
 }
