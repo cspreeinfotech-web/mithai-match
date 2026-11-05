@@ -27,14 +27,12 @@ Deno.serve(async (req) => {
   // this endpoint IS the authorized path for a user to erase their own data).
   const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-  const tables = ['purchases', 'shop_upgrades', 'inventory', 'level_progress', 'profiles'];
-  for (const table of tables) {
-    const { error } = await adminClient.from(table).delete().eq('user_id', userId);
-    // profiles' own primary key is `id`, not `user_id` — handle it separately below.
-    if (table === 'profiles' && error) {
-      await adminClient.from('profiles').delete().eq('id', userId);
-    }
+  const tablesByUserId = ['purchases', 'shop_upgrades', 'inventory', 'level_progress'];
+  for (const table of tablesByUserId) {
+    await adminClient.from(table).delete().eq('user_id', userId);
   }
+  // profiles' own primary key is `id`, not `user_id`.
+  await adminClient.from('profiles').delete().eq('id', userId);
 
   const { error: authDeleteError } = await adminClient.auth.admin.deleteUser(userId);
   if (authDeleteError) {

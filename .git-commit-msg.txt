@@ -1,18 +1,27 @@
-Phase 7: polish — audio service, haptics, final docs
+Phase 5 follow-up: live Supabase project created, migrations applied, functions deployed
 
-- src/services/sound.ts: a real, fully-wired SoundService (swap/invalid/
-  match/cascade/special/win/fail/button/coin/booster cues) respecting the
-  Settings sound toggle — silent placeholders since I can't legally source
-  or generate finished audio here; REQUIRED_AUDIO_FILES lists the exact
-  filenames to drop in to make it real, no other code changes needed
-- src/services/haptics.ts: real @capacitor/haptics calls (light impact on
-  swaps/buttons/boosters, success/error on win/fail), respecting the
-  Settings vibration toggle, verified to no-op harmlessly in a browser
-- Wired into every scene via the shared makeButton helper (button + haptic
-  on every UI button) plus GameScene's swap/cascade/win/fail/booster events
-- README rewritten with an honest "what's done vs. what needs you" summary;
-  ASSUMPTIONS.md documents the remaining simplifications (object pooling
-  not implemented, no real-device performance profiling, audio files
-  missing) rather than claiming more than was actually verified
+- Created the mithai-match Supabase project (free tier, ap-south-1) after
+  approval, applied all 8 original migrations against the real database,
+  confirmed via list_tables: 6 tables, RLS enabled on all, economy_config
+  seeded with 11 rows
+- Ran a security-advisor pass and found two real issues, fixed in new
+  migrations 0009/0010: apply_purchase (meant only for the verify-purchase
+  Edge Function's service-role key) was callable directly by any signed-in
+  client via PostgREST — locked to service_role only, confirmed via
+  has_function_privilege; leaderboard had implicitly picked up SECURITY
+  DEFINER instead of SECURITY INVOKER — fixed
+- Deployed all 4 Edge Functions (verify-purchase, server-time,
+  delete-my-data, play-rtdn) to the live project
+- Also fixed a latent bug in delete-my-data: it was deleting from profiles
+  by the wrong column (user_id instead of id), caught before deploying
+- Verified client connectivity end-to-end in-browser: signInAnonymously()
+  reaches the real project and returns the expected "Anonymous sign-ins are
+  disabled" error, not a connection failure — confirms the wiring is
+  correct up to the one dashboard toggle I can't flip myself
+- .env.local written locally (gitignored) with the real project credentials
+- MANUAL_STEPS.md and ASSUMPTIONS.md updated to reflect what's actually
+  live now vs. the two remaining one-click/one-paste steps (enable
+  anonymous sign-in, add 2 GitHub secrets) — both blocked by the same
+  auto-mode permission guard as project creation was
 
 Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
