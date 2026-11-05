@@ -26,6 +26,8 @@ import { ECONOMY } from '../../config/economy.config';
 import { ENABLE_ADS } from '../../config/app.config';
 import { getProduct } from '../../config/products.config';
 import { makeButton, THEME } from '../ui';
+import { sound } from '../../services/sound';
+import { haptics } from '../../services/haptics';
 import {
   generateGameTextures,
   SWEET_TEXTURE_KEY,
@@ -320,15 +322,20 @@ export class GameScene extends Phaser.Scene {
     const result = resolveSwap(this.board, a, b, this.rng);
 
     if (!result.valid) {
+      sound.playSfx('invalid');
+      void haptics.error();
       await this.bounceInvalidSwap(a, b);
       this.inputLocked = false;
       return;
     }
 
+    sound.playSfx('swap');
+    void haptics.light();
     this.movesRemaining -= 1;
     await this.animateDirectSwap(a, b);
 
     for (const step of result.steps) {
+      sound.playSfx(step.specialsCreated.length > 0 ? 'special-create' : step.multiplier > 1 ? 'cascade' : 'match');
       applyStepToGoals(this.goalProgress, step);
       this.score += step.scoreGained;
       await this.animateClear(step.cleared.map((c) => ({ row: c.row, col: c.col })), step.scoreGained, step.multiplier);
@@ -527,6 +534,8 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     useBooster(profile, 'shuffle');
+    sound.playSfx('booster');
+    void haptics.light();
     shuffleBoard(this.board, this.rng);
     this.renderFullBoard(this.board, true);
     this.refreshHud();
@@ -536,6 +545,8 @@ export class GameScene extends Phaser.Scene {
   // ---------------------------------------------------------------- win / fail / pause
 
   private onWin(): void {
+    sound.playSfx('win');
+    void haptics.success();
     const stars = calculateStars(this.levelConfig, this.score, true);
     const coins = coinsForWin(stars);
     const profile = loadProfile();
@@ -545,6 +556,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   private onFail(): void {
+    sound.playSfx('fail');
+    void haptics.error();
     // Game state (board, score, moves) is already frozen — inputLocked stays true and
     // nothing in attemptSwap/animate* runs again until this popup resolves one way or
     // another, including while a purchase is in flight or the app is backgrounded.

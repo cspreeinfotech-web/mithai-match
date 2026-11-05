@@ -3,6 +3,7 @@ import { PRODUCTS, getProduct } from '../../config/products.config';
 import { billing } from '../../services/billing';
 import { loadProfile } from '../../services/profile';
 import { makeButton, THEME } from '../ui';
+import { sound } from '../../services/sound';
 
 const BADGES: Record<string, string> = {
   coins_900: 'POPULAR',
@@ -73,6 +74,7 @@ export class StoreScene extends Phaser.Scene {
     const outcome = await billing.purchase(productId);
     switch (outcome.kind) {
       case 'granted':
+        sound.playSfx('coin');
         this.showToast(`Purchased! +${outcome.coins || outcome.lives}`);
         this.redraw();
         break;

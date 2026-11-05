@@ -1,0 +1,18 @@
+Phase 7: polish — audio service, haptics, final docs
+
+- src/services/sound.ts: a real, fully-wired SoundService (swap/invalid/
+  match/cascade/special/win/fail/button/coin/booster cues) respecting the
+  Settings sound toggle — silent placeholders since I can't legally source
+  or generate finished audio here; REQUIRED_AUDIO_FILES lists the exact
+  filenames to drop in to make it real, no other code changes needed
+- src/services/haptics.ts: real @capacitor/haptics calls (light impact on
+  swaps/buttons/boosters, success/error on win/fail), respecting the
+  Settings vibration toggle, verified to no-op harmlessly in a browser
+- Wired into every scene via the shared makeButton helper (button + haptic
+  on every UI button) plus GameScene's swap/cascade/win/fail/booster events
+- README rewritten with an honest "what's done vs. what needs you" summary;
+  ASSUMPTIONS.md documents the remaining simplifications (object pooling
+  not implemented, no real-device performance profiling, audio files
+  missing) rather than claiming more than was actually verified
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>

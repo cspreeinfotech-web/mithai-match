@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import { sound } from '../services/sound';
+import { haptics } from '../services/haptics';
 
 // Small shared helpers so every new menu/popup scene doesn't re-derive the same button
 // boilerplate. Theme: light cream background, terracotta/saffron accents (see Phase 3).
@@ -35,6 +37,8 @@ export function makeButton(
   btn.on('pointerdown', () => btn.setScale(0.95));
   btn.on('pointerup', () => {
     btn.setScale(1);
+    sound.playSfx('button');
+    void haptics.light();
     onClick();
   });
   return btn;

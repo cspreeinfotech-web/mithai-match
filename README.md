@@ -2,7 +2,30 @@
 
 A match-3 puzzle game with an Indian mithai (sweets) theme. Built with Phaser 3 + Vite + Capacitor (Android), Supabase backend, Google Play Billing.
 
-Status: **Phase 1 — Foundation** (menu screen only; gameplay lands in later phases). See `ASSUMPTIONS.md` for decisions made along the way and `MANUAL_STEPS.md` for everything that needs your action (Play Console, keystore, Supabase secrets).
+**Status: all 7 phases built.** 50 levels, boosters, the Mithai Shop meta-game, daily
+rewards, lives, settings/i18n (English + Hinglish), a full Supabase schema + Edge Functions
+(not yet applied to a live project — see below), and billing (verified end-to-end against
+MockBilling; real Google Play Billing is wired but device-unverified). See `ASSUMPTIONS.md`
+for every decision made along the way and exactly what is/isn't verified, and
+`MANUAL_STEPS.md` for everything that needs your action (creating the Supabase project, Play
+Console, keystore, service accounts).
+
+## What's genuinely done vs. what still needs you
+
+✅ **Fully working and tested**: the match-3 engine (board generation, matching, specials,
+cascades, combos, blockers, 50 levels — 45 Vitest cases), the full gameplay loop (swap, win,
+lose, continue, boosters), the level map / shop / daily reward / settings screens, and the
+MockBilling purchase flow — all verified by running the actual game in a browser, not just by
+reading the code. `android-debug.yml` is green and produces an installable APK.
+
+🟡 **Written and locally reasoned through, but unverified against the real thing**: the
+Supabase schema/RPCs/Edge Functions (no live project exists — see `MANUAL_STEPS.md` §Phase 5)
+and real Google Play Billing (`RealBillingProvider` — no Play Console or test device here).
+
+⬜ **Needs you, documented in `MANUAL_STEPS.md`**: creating the Supabase project (one approval
+away), the Play Console app + 6 in-app products + license testers, the release keystore,
+hosting the privacy policy, and supplying real audio files (the game is fully playable
+without them — see `src/services/sound.ts`).
 
 ## Run locally
 
