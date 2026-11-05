@@ -2,6 +2,9 @@ import Phaser from 'phaser';
 import { App } from '@capacitor/app';
 import { BootScene } from './game/scenes/BootScene';
 import { MenuScene } from './game/scenes/MenuScene';
+import { MapScene } from './game/scenes/MapScene';
+import { ShopScene } from './game/scenes/ShopScene';
+import { SettingsScene } from './game/scenes/SettingsScene';
 import { GameScene } from './game/scenes/GameScene';
 
 // Portrait-only, safe-area-aware, letterboxed scaling (small phones to tablets).
@@ -15,7 +18,7 @@ const config: Phaser.Types.Core.GameConfig = {
     width: 720,
     height: 1280,
   },
-  scene: [BootScene, MenuScene, GameScene],
+  scene: [BootScene, MenuScene, MapScene, ShopScene, SettingsScene, GameScene],
 };
 
 const game = new Phaser.Game(config);

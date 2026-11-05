@@ -1,4 +1,5 @@
 import { ECONOMY, type BoosterId } from '../config/economy.config';
+import type { Language } from './i18n';
 import { loadJson, saveJson } from './storage';
 
 export interface PlayerProfile {
@@ -10,7 +11,8 @@ export interface PlayerProfile {
   inventory: Record<BoosterId, number>;
   dailyStreak: number;
   lastDailyClaim: number | null; // epoch ms
-  language: 'en' | 'hi-roman';
+  purchasedDecorations: string[];
+  language: Language;
   soundOn: boolean;
   musicOn: boolean;
   hapticsOn: boolean;
@@ -28,6 +30,7 @@ function defaultProfile(): PlayerProfile {
     inventory: { hammer: 0, shuffle: 0, extraStriped: 0, extraMoves3: 0 },
     dailyStreak: 0,
     lastDailyClaim: null,
+    purchasedDecorations: [],
     language: 'en',
     soundOn: true,
     musicOn: true,
@@ -57,6 +60,41 @@ export function recordLevelWin(profile: PlayerProfile, levelId: number, stars: 0
 
 export function spendLife(profile: PlayerProfile): PlayerProfile {
   const next = { ...profile, lives: Math.max(0, profile.lives - 1), livesUpdatedAt: Date.now() };
+  saveProfile(next);
+  return next;
+}
+
+export function spendCoins(profile: PlayerProfile, amount: number): PlayerProfile | null {
+  if (profile.coins < amount) return null;
+  const next = { ...profile, coins: profile.coins - amount };
+  saveProfile(next);
+  return next;
+}
+
+export function addCoins(profile: PlayerProfile, amount: number): PlayerProfile {
+  const next = { ...profile, coins: profile.coins + amount };
+  saveProfile(next);
+  return next;
+}
+
+export function addBooster(profile: PlayerProfile, booster: BoosterId, qty = 1): PlayerProfile {
+  const next = { ...profile, inventory: { ...profile.inventory, [booster]: profile.inventory[booster] + qty } };
+  saveProfile(next);
+  return next;
+}
+
+export function useBooster(profile: PlayerProfile, booster: BoosterId): PlayerProfile | null {
+  if (profile.inventory[booster] <= 0) return null;
+  const next = { ...profile, inventory: { ...profile.inventory, [booster]: profile.inventory[booster] - 1 } };
+  saveProfile(next);
+  return next;
+}
+
+export function buyDecoration(profile: PlayerProfile, decorationId: string, cost: number): PlayerProfile | null {
+  if (profile.purchasedDecorations.includes(decorationId)) return null;
+  const spent = spendCoins(profile, cost);
+  if (!spent) return null;
+  const next = { ...spent, purchasedDecorations: [...spent.purchasedDecorations, decorationId] };
   saveProfile(next);
   return next;
 }

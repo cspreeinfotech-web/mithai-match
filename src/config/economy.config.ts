@@ -21,6 +21,18 @@ export const ECONOMY = {
   continueMovesCoinPrices: [80, 140, 220] as const,
   continueMovesGranted: 5,
   maxContinuesPerAttempt: 3,
+
+  // 7-day daily login streak: coins each day, a booster on day 4, a bigger coin bonus on day 7.
+  // Streak resets to day 1 if a calendar day is missed.
+  dailyRewards: [
+    { coins: 20 },
+    { coins: 30 },
+    { coins: 40 },
+    { coins: 30, booster: 'shuffle' as const },
+    { coins: 60 },
+    { coins: 80 },
+    { coins: 150, booster: 'extraStriped' as const },
+  ],
 } as const;
 
 export type BoosterId = keyof typeof ECONOMY.boosterPrices;

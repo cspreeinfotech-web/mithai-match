@@ -9,13 +9,17 @@ import {
   calculateStars,
   coinsForWin,
   findAnyValidMove,
+  applyGravity,
+  refill,
+  shuffleBoard,
   type Board,
   type LevelConfig,
   type Tile,
   type GoalProgress,
 } from '../../core';
 import { getLevel } from '../../levels';
-import { loadProfile, recordLevelWin, spendLife } from '../../services/profile';
+import { loadProfile, recordLevelWin, spendLife, useBooster } from '../../services/profile';
+import { t } from '../../services/i18n';
 import {
   generateGameTextures,
   SWEET_TEXTURE_KEY,
@@ -53,15 +57,21 @@ export class GameScene extends Phaser.Scene {
   private movesText!: Phaser.GameObjects.Text;
   private scoreText!: Phaser.GameObjects.Text;
   private goalText!: Phaser.GameObjects.Text;
+  private boosterText!: Phaser.GameObjects.Text;
+  private hammerArmed = false;
+  private extraMoves = 0;
+  private extraStriped = false;
 
   constructor() {
     super('Game');
   }
 
-  init(data: { levelId: number }): void {
+  init(data: { levelId: number; extraMoves?: number; extraStriped?: boolean }): void {
     const config = getLevel(data.levelId);
     if (!config) throw new Error(`Unknown level id ${data.levelId}`);
     this.levelConfig = config;
+    this.extraMoves = data.extraMoves ?? 0;
+    this.extraStriped = data.extraStriped ?? false;
   }
 
   create(): void {
@@ -69,11 +79,13 @@ export class GameScene extends Phaser.Scene {
 
     this.board = generateBoard(this.levelConfig);
     this.rng = new Rng(this.levelConfig.seed + 1); // distinct stream from board generation
+    if (this.extraStriped) this.applyExtraStripedBooster();
     this.goalProgress = initGoalProgress(this.levelConfig, this.board);
-    this.movesRemaining = this.levelConfig.moves;
+    this.movesRemaining = this.levelConfig.moves + this.extraMoves;
     this.score = 0;
     this.inputLocked = false;
     this.selected = null;
+    this.hammerArmed = false;
 
     const { width, height } = this.scale;
     const availableWidth = width - 40;
@@ -139,12 +151,28 @@ export class GameScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
     pauseButton.on('pointerdown', () => this.showPausePopup());
 
+    const hammerBtn = this.add
+      .text(20, 150, '🔨', { fontFamily: 'sans-serif', fontSize: '32px' })
+      .setInteractive({ useHandCursor: true });
+    hammerBtn.on('pointerdown', () => this.armHammer());
+
+    const shuffleBtn = this.add
+      .text(70, 150, '🔀', { fontFamily: 'sans-serif', fontSize: '32px' })
+      .setInteractive({ useHandCursor: true });
+    shuffleBtn.on('pointerdown', () => this.useShuffleBooster());
+
+    this.boosterText = this.add
+      .text(20, 190, '', { fontFamily: 'sans-serif', fontSize: '14px', color: '#6b4a35' })
+      .setOrigin(0, 0);
+
     this.refreshHud();
   }
 
   private refreshHud(): void {
     this.movesText.setText(`Moves: ${this.movesRemaining}`);
     this.scoreText.setText(`Score: ${this.score}`);
+    const inv = loadProfile().inventory;
+    this.boosterText.setText(`x${inv.hammer}        x${inv.shuffle}`);
     this.goalText.setText(
       this.goalProgress
         .map((p) => {
@@ -219,6 +247,13 @@ export class GameScene extends Phaser.Scene {
     const cell = this.worldToCell(pointer.x, pointer.y);
     if (!cell || !this.grid[cell.row]?.[cell.col]) return;
     this.resetIdleTimer();
+
+    if (this.hammerArmed) {
+      this.hammerArmed = false;
+      void this.applyHammer(cell);
+      return;
+    }
+
     this.dragStart = { pos: cell, x: pointer.x, y: pointer.y };
 
     if (this.selected) {
@@ -427,6 +462,67 @@ export class GameScene extends Phaser.Scene {
     for (const tween of this.hintTweens) tween.remove();
     this.hintTweens = [];
     for (const row of this.grid) for (const c of row) c?.setScale(1);
+  }
+
+  // ---------------------------------------------------------------- boosters
+
+  /** Pre-level "Extra Striped" booster: converts one random sweet on the starting board
+   *  into a striped special before the first render. */
+  private applyExtraStripedBooster(): void {
+    const candidates: CellPos[] = [];
+    for (let row = 0; row < this.board.height; row++) {
+      for (let col = 0; col < this.board.width; col++) {
+        const tile = this.board.cells[row]![col];
+        if (tile && tile.blocker !== 'locked') candidates.push({ row, col });
+      }
+    }
+    if (candidates.length === 0) return;
+    const pick = candidates[this.rng.int(candidates.length)]!;
+    this.board.cells[pick.row]![pick.col]!.special = this.rng.next() < 0.5 ? 'striped-h' : 'striped-v';
+  }
+
+  private armHammer(): void {
+    if (this.inputLocked) return;
+    const profile = loadProfile();
+    if (profile.inventory.hammer <= 0) {
+      this.showToast('No hammers left — buy one before your next level');
+      return;
+    }
+    this.hammerArmed = !this.hammerArmed;
+    this.showToast(this.hammerArmed ? 'Tap a sweet to remove it' : 'Hammer cancelled');
+  }
+
+  private async applyHammer(cell: CellPos): Promise<void> {
+    const used = useBooster(loadProfile(), 'hammer');
+    if (!used) return;
+    this.inputLocked = true;
+    const target = this.grid[cell.row]?.[cell.col];
+    if (target) {
+      await new Promise<void>((resolve) => {
+        this.tweens.add({ targets: target, scale: 0, alpha: 0, duration: 150, onComplete: () => resolve() });
+      });
+    }
+    this.board.cells[cell.row]![cell.col] = null;
+    applyGravity(this.board);
+    refill(this.board, this.rng);
+    this.renderFullBoard(this.board, true);
+    await this.delay(220);
+    this.refreshHud();
+    this.inputLocked = false;
+  }
+
+  private useShuffleBooster(): void {
+    if (this.inputLocked) return;
+    const profile = loadProfile();
+    if (profile.inventory.shuffle <= 0) {
+      this.showToast('No shuffles left — buy one before your next level');
+      return;
+    }
+    useBooster(profile, 'shuffle');
+    shuffleBoard(this.board, this.rng);
+    this.renderFullBoard(this.board, true);
+    this.refreshHud();
+    this.showToast('Shuffled!');
   }
 
   // ---------------------------------------------------------------- win / fail / pause

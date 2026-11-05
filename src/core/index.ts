@@ -11,3 +11,5 @@ export type { GoalProgress } from './levelRules';
 export { coinsForWin, continuePrice, regenerateLives, millisUntilNextLife } from './economy';
 export type { LifeState } from './economy';
 export { validateLevel, validateAllLevels } from './levelValidator';
+export { canClaimDaily, claimDaily } from './daily';
+export type { DailyClaimState, DailyClaimResult } from './daily';
