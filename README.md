@@ -27,7 +27,7 @@ npm test
 
 ## Build the Android app
 
-Requires JDK 17 and the Android SDK locally (CI does this for you automatically on every push — see below).
+Requires JDK 21 and the Android SDK locally (CI does this for you automatically on every push — see below).
 
 ```bash
 npm run build
