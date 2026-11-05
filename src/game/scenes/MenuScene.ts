@@ -3,6 +3,7 @@ import { APP_NAME } from '../../config/app.config';
 import { ECONOMY } from '../../config/economy.config';
 import { canClaimDaily, claimDaily } from '../../core';
 import { loadProfile, saveProfile, addCoins, addBooster } from '../../services/profile';
+import { syncDailyClaim } from '../../services/cloudSync';
 import { t } from '../../services/i18n';
 import { makeButton, makeModalOverlay, THEME } from '../ui';
 
@@ -62,6 +63,7 @@ export class MenuScene extends Phaser.Scene {
       next = addBooster(next, result.reward.booster);
     }
     saveProfile(next);
+    void syncDailyClaim();
 
     const { overlay, panel } = makeModalOverlay(this);
     const title = this.add

@@ -19,6 +19,7 @@ import {
 } from '../../core';
 import { getLevel } from '../../levels';
 import { loadProfile, recordLevelWin, spendLife, useBooster } from '../../services/profile';
+import { syncLevelWin } from '../../services/cloudSync';
 import { t } from '../../services/i18n';
 import {
   generateGameTextures,
@@ -532,6 +533,7 @@ export class GameScene extends Phaser.Scene {
     const coins = coinsForWin(stars);
     const profile = loadProfile();
     recordLevelWin(profile, this.levelConfig.id, stars, coins);
+    void syncLevelWin(this.levelConfig.id, this.score, stars);
     this.showEndPopup(true, stars, coins);
   }
 
