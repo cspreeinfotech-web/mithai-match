@@ -4,15 +4,22 @@ import { loadProfile, saveProfile } from '../../services/profile';
 import { t } from '../../services/i18n';
 import { makeButton, THEME } from '../ui';
 import { billing } from '../../services/billing';
+import { getAuthStatus, requestEmailCode, verifyEmailCode, type AuthStatus } from '../../services/accountAuth';
 
 
 export class SettingsScene extends Phaser.Scene {
+  private authStatus: AuthStatus = { isAnonymous: true, email: null };
+
   constructor() {
     super('Settings');
   }
 
   create(): void {
     this.redraw();
+    getAuthStatus().then((status) => {
+      this.authStatus = status;
+      this.redraw();
+    });
   }
 
   private redraw(): void {
@@ -26,6 +33,26 @@ export class SettingsScene extends Phaser.Scene {
     makeButton(this, width - 60, 36, '✕', () => this.scene.start('Menu'), { fontSize: '26px' });
 
     let y = 110;
+
+    this.add
+      .text(40, y, this.authStatus.email ? `${t('signedInAs', lang)} ${this.authStatus.email}` : t('playingAsGuest', lang), {
+        fontFamily: 'sans-serif',
+        fontSize: '16px',
+        color: THEME.subtleText,
+      })
+      .setOrigin(0, 0.5);
+    y += 44;
+
+    if (!this.authStatus.email) {
+      makeButton(this, width / 2, y, t('signInWithEmail', lang), () => this.handleEmailSignIn(), { fontSize: '18px' });
+      y += 56;
+    }
+    makeButton(this, width / 2, y, t('signInWithGoogle', lang), () => this.showToast(t('googleComingSoon', lang)), {
+      fontSize: '16px',
+      bg: '#8a7c63',
+    });
+    y += 64;
+
     const row = (label: string, value: string, onToggle: () => void) => {
       this.add.text(40, y, label, { fontFamily: 'sans-serif', fontSize: '22px', color: THEME.text }).setOrigin(0, 0.5);
       makeButton(this, width - 90, y, value, onToggle, { fontSize: '18px' });
@@ -77,6 +104,31 @@ export class SettingsScene extends Phaser.Scene {
         color: '#8a7c63',
       })
       .setOrigin(0.5);
+  }
+
+  // shortcut: window.prompt() for email/code entry instead of an on-screen keyboard UI —
+  // works fine in the Android WebView, upgrade to an in-scene text input if that ever feels cheap.
+  private async handleEmailSignIn(): Promise<void> {
+    const profile = loadProfile();
+    const lang = profile.language;
+    const email = window.prompt('Enter your email:')?.trim();
+    if (!email) return;
+    const sent = await requestEmailCode(email);
+    if (!sent.ok) {
+      this.showToast(sent.error);
+      return;
+    }
+    this.showToast(t('codeSent', lang));
+    const code = window.prompt('Enter the 6-digit code we emailed you:')?.trim();
+    if (!code) return;
+    const verified = await verifyEmailCode(email, code, sent.linking);
+    if (!verified.ok) {
+      this.showToast(verified.error);
+      return;
+    }
+    this.authStatus = await getAuthStatus();
+    this.showToast(t('signedInToast', lang));
+    this.redraw();
   }
 
   private showConfirmDelete(): void {

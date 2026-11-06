@@ -10,6 +10,20 @@ export const SWEET_TEXTURE_KEY = (s: SweetType): string => `sweet-${s}`;
 export const SPECIAL_TEXTURE_KEY = (s: 'striped-h' | 'striped-v' | 'colorbomb' | 'wrapped'): string => `special-${s}`;
 export const BLOCKER_TEXTURE_KEY = (b: 'ice1' | 'ice2' | 'locked' | 'honey'): string => `blocker-${b}`;
 export const INGREDIENT_TEXTURE_KEY = 'ingredient-badge';
+export const TILE_BG_TEXTURE_KEY = 'tile-bg';
+export const TILE_SHINE_TEXTURE_KEY = 'tile-shine';
+export const GLOW_PARTICLE_TEXTURE_KEY = 'glow-particle';
+
+// A per-sweet accent colour, used to tint match-burst particles so "Tasty!" feels tied to
+// what was just matched rather than one generic colour for every match.
+export const SWEET_ACCENT_COLOR: Record<SweetType, number> = {
+  laddu: 0xf09a35,
+  jalebi: 0xf4c430,
+  gulabjamun: 0x7a342a,
+  barfi: 0x8bb34a,
+  rasgulla: 0xe9e4da,
+  kajukatli: 0xd9d2c4,
+};
 
 function soften(scene: Phaser.Scene, key: string, draw: (g: Phaser.GameObjects.Graphics) => void): void {
   const g = scene.add.graphics();
@@ -173,5 +187,30 @@ export function generateGameTextures(scene: Phaser.Scene): void {
     g.fillCircle(CENTER, CENTER, 14);
     g.fillStyle(0x2e7d32, 1);
     g.fillRect(CENTER - 2, CENTER - 24, 4, 12);
+  });
+
+  // Glossy rounded "tray" sat behind every sweet, plus a soft diagonal shine on top of it —
+  // the two things that make flat shapes read as polished, tactile tiles instead of stickers.
+  soften(scene, TILE_BG_TEXTURE_KEY, (g) => {
+    g.fillStyle(0x000000, 0.12);
+    g.fillRoundedRect(6, 10, SIZE - 12, SIZE - 12, 22);
+    g.fillGradientStyle(0xfffaf0, 0xfffaf0, 0xeedcb8, 0xeedcb8, 1);
+    g.fillRoundedRect(4, 4, SIZE - 8, SIZE - 10, 22);
+    g.lineStyle(2, 0xffffff, 0.6);
+    g.strokeRoundedRect(4, 4, SIZE - 8, SIZE - 10, 22);
+  });
+  soften(scene, TILE_SHINE_TEXTURE_KEY, (g) => {
+    g.fillStyle(0xffffff, 0.4);
+    g.fillEllipse(CENTER - 16, CENTER - 34, 66, 24);
+    g.fillStyle(0xffffff, 0.16);
+    g.fillEllipse(CENTER + 14, CENTER + 36, 44, 14);
+  });
+
+  // Soft radial glow for match-burst particles, tinted per-sweet at emit time.
+  soften(scene, GLOW_PARTICLE_TEXTURE_KEY, (g) => {
+    for (let r = 56; r >= 4; r -= 4) {
+      g.fillStyle(0xffffff, 0.06 + ((56 - r) / 56) * 0.5);
+      g.fillCircle(CENTER, CENTER, r);
+    }
   });
 }

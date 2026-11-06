@@ -34,6 +34,10 @@ import {
   SPECIAL_TEXTURE_KEY,
   BLOCKER_TEXTURE_KEY,
   INGREDIENT_TEXTURE_KEY,
+  TILE_BG_TEXTURE_KEY,
+  TILE_SHINE_TEXTURE_KEY,
+  GLOW_PARTICLE_TEXTURE_KEY,
+  SWEET_ACCENT_COLOR,
 } from '../textures';
 
 const HUD_HEIGHT = 200;
@@ -65,6 +69,7 @@ export class GameScene extends Phaser.Scene {
   private movesText!: Phaser.GameObjects.Text;
   private scoreText!: Phaser.GameObjects.Text;
   private goalText!: Phaser.GameObjects.Text;
+  private goalPill!: Phaser.GameObjects.Graphics;
   private boosterText!: Phaser.GameObjects.Text;
   private hammerArmed = false;
   private extraMoves = 0;
@@ -135,54 +140,96 @@ export class GameScene extends Phaser.Scene {
   // ---------------------------------------------------------------- HUD
 
   private buildHud(): void {
+    const { width } = this.scale;
+
+    // Glossy gradient panel the whole HUD sits on, rounded at the bottom so it reads as a
+    // tray rather than the text just floating on the page background.
+    const bar = this.add.graphics();
+    bar.fillGradientStyle(0xf7b267, 0xf7b267, 0xe8793f, 0xe8793f, 1);
+    bar.fillRoundedRect(0, 0, width, HUD_HEIGHT, { tl: 0, tr: 0, bl: 28, br: 28 });
+    bar.fillStyle(0xffffff, 0.14);
+    bar.fillRoundedRect(0, 0, width, HUD_HEIGHT * 0.4, { tl: 0, tr: 0, bl: 0, br: 0 });
+    bar.fillStyle(0x3a1d08, 0.18);
+    bar.fillRoundedRect(0, HUD_HEIGHT - 8, width, 8, { tl: 0, tr: 0, bl: 28, br: 28 });
+
     this.add
-      .text(20, 20, this.levelConfig.id <= 999 ? `Level ${this.levelConfig.id}` : '', {
+      .text(20, 16, this.levelConfig.id <= 999 ? `Level ${this.levelConfig.id}` : '', {
         fontFamily: 'sans-serif',
-        fontSize: '28px',
-        color: '#c9622a',
+        fontSize: '22px',
+        fontStyle: 'bold',
+        color: '#fff7ec',
       })
-      .setOrigin(0, 0);
+      .setOrigin(0, 0)
+      .setShadow(0, 2, '#2a1406', 2, false, true);
 
     this.movesText = this.add
-      .text(this.scale.width - 20, 20, '', { fontFamily: 'sans-serif', fontSize: '28px', color: '#3a2317' })
-      .setOrigin(1, 0);
+      .text(width - 20, 14, '', { fontFamily: 'sans-serif', fontSize: '28px', fontStyle: 'bold', color: '#ffffff' })
+      .setOrigin(1, 0)
+      .setShadow(0, 2, '#2a1406', 3, false, true);
 
     this.scoreText = this.add
-      .text(20, 60, '', { fontFamily: 'sans-serif', fontSize: '24px', color: '#6b4a35' })
+      .text(20, 48, '', { fontFamily: 'sans-serif', fontSize: '19px', color: '#fff2de' })
       .setOrigin(0, 0);
 
+    this.goalPill = this.add.graphics();
     this.goalText = this.add
-      .text(20, 100, '', { fontFamily: 'sans-serif', fontSize: '20px', color: '#2f7a4f', wordWrap: { width: this.scale.width - 120 } })
-      .setOrigin(0, 0);
+      .text(width / 2, 92, '', {
+        fontFamily: 'sans-serif',
+        fontSize: '16px',
+        fontStyle: 'bold',
+        color: '#2f4a1f',
+        align: 'center',
+        wordWrap: { width: width - 80 },
+      })
+      .setOrigin(0.5, 0);
 
-    const pauseButton = this.add
-      .text(this.scale.width - 20, 150, '⏸', { fontFamily: 'sans-serif', fontSize: '36px', color: '#3a2317' })
-      .setOrigin(1, 0)
-      .setInteractive({ useHandCursor: true });
-    pauseButton.on('pointerdown', () => this.showPausePopup());
-
-    const hammerBtn = this.add
-      .text(20, 150, '🔨', { fontFamily: 'sans-serif', fontSize: '32px' })
-      .setInteractive({ useHandCursor: true });
-    hammerBtn.on('pointerdown', () => this.armHammer());
-
-    const shuffleBtn = this.add
-      .text(70, 150, '🔀', { fontFamily: 'sans-serif', fontSize: '32px' })
-      .setInteractive({ useHandCursor: true });
-    shuffleBtn.on('pointerdown', () => this.useShuffleBooster());
+    this.makeIconButton(width - 44, 150, '⏸', () => this.showPausePopup());
+    this.makeIconButton(44, 150, '🔨', () => this.armHammer());
+    this.makeIconButton(104, 150, '🔀', () => this.useShuffleBooster());
 
     this.boosterText = this.add
-      .text(20, 190, '', { fontFamily: 'sans-serif', fontSize: '14px', color: '#6b4a35' })
-      .setOrigin(0, 0);
+      .text(this.scale.width / 2, 190, '', { fontFamily: 'sans-serif', fontSize: '13px', color: '#fff2de' })
+      .setOrigin(0.5, 0);
 
     this.refreshHud();
   }
 
+  /** Small glossy circular button used for the HUD's icon actions (pause/hammer/shuffle) —
+   *  kept local to GameScene since the gameplay-HUD polish pass is scoped to this screen. */
+  private makeIconButton(x: number, y: number, label: string, onClick: () => void): Phaser.GameObjects.Container {
+    const radius = 26;
+    const g = this.add.graphics();
+    g.fillStyle(0x000000, 0.18);
+    g.fillCircle(2, 3, radius);
+    g.fillGradientStyle(0xffffff, 0xffffff, 0xf0dfc4, 0xf0dfc4, 1);
+    g.fillCircle(0, 0, radius);
+    g.lineStyle(2, 0xffffff, 0.9);
+    g.strokeCircle(0, 0, radius);
+    const icon = this.add.text(0, -1, label, { fontSize: '24px' }).setOrigin(0.5);
+    const container = this.add.container(x, y, [g, icon]);
+    container.setSize(radius * 2, radius * 2);
+    container.setInteractive(new Phaser.Geom.Circle(0, 0, radius), Phaser.Geom.Circle.Contains);
+    container.on('pointerdown', () => container.setScale(0.9));
+    container.on('pointerup', () => {
+      container.setScale(1);
+      sound.playSfx('button');
+      void haptics.light();
+      onClick();
+    });
+    return container;
+  }
+
   private refreshHud(): void {
-    this.movesText.setText(`Moves: ${this.movesRemaining}`);
-    this.scoreText.setText(`Score: ${this.score}`);
+    const prevMoves = this.movesText.text;
+    this.movesText.setText(`⏱ ${this.movesRemaining}`);
+    if (prevMoves && prevMoves !== this.movesText.text) this.punch(this.movesText);
+
+    const prevScore = this.scoreText.text;
+    this.scoreText.setText(`Score ${this.score}`);
+    if (prevScore && prevScore !== this.scoreText.text) this.punch(this.scoreText);
+
     const inv = loadProfile().inventory;
-    this.boosterText.setText(`x${inv.hammer}        x${inv.shuffle}`);
+    this.boosterText.setText(`🔨 x${inv.hammer}        🔀 x${inv.shuffle}`);
     this.goalText.setText(
       this.goalProgress
         .map((p) => {
@@ -199,6 +246,19 @@ export class GameScene extends Phaser.Scene {
         })
         .join('   '),
     );
+    this.redrawGoalPill();
+  }
+
+  private redrawGoalPill(): void {
+    this.goalPill.clear();
+    const bounds = this.goalText.getBounds();
+    this.goalPill.fillStyle(0xffffff, 0.6);
+    this.goalPill.fillRoundedRect(bounds.x - 16, bounds.y - 8, bounds.width + 32, bounds.height + 16, 16);
+  }
+
+  private punch(target: Phaser.GameObjects.Text): void {
+    target.setScale(1.3);
+    this.tweens.add({ targets: target, scale: 1, duration: 240, ease: 'Back.Out' });
   }
 
   // ---------------------------------------------------------------- rendering
@@ -223,6 +283,8 @@ export class GameScene extends Phaser.Scene {
     const container = this.add.container(x, animateIn ? y - this.tileSize * 1.5 : y);
     const scaleFactor = (this.tileSize / 128) * 0.92;
 
+    container.add(this.add.image(0, 0, TILE_BG_TEXTURE_KEY).setScale(scaleFactor));
+
     if (tile.blocker === 'locked') {
       const rock = this.add.image(0, 0, BLOCKER_TEXTURE_KEY('locked')).setScale(scaleFactor);
       container.add(rock);
@@ -239,6 +301,8 @@ export class GameScene extends Phaser.Scene {
         container.add(this.add.image(this.tileSize * 0.3, -this.tileSize * 0.3, INGREDIENT_TEXTURE_KEY).setScale(scaleFactor * 0.6));
       }
     }
+
+    container.add(this.add.image(0, 0, TILE_SHINE_TEXTURE_KEY).setScale(scaleFactor));
 
     container.setSize(this.tileSize, this.tileSize);
     container.setInteractive(new Phaser.Geom.Rectangle(-this.tileSize / 2, -this.tileSize / 2, this.tileSize, this.tileSize), Phaser.Geom.Rectangle.Contains);
@@ -421,6 +485,7 @@ export class GameScene extends Phaser.Scene {
     this.popupText(cx, cy, `+${scoreGained}`, '#ffe066');
     if (multiplier >= 3) this.popupText(cx, cy - 36, 'Sugar Rush!', '#ff9a3c');
     else if (multiplier === 2) this.popupText(cx, cy - 36, 'Tasty!', '#9af08a');
+    this.emitMatchBurst(cells);
 
     await new Promise<void>((resolve) => {
       this.tweens.add({
@@ -432,6 +497,27 @@ export class GameScene extends Phaser.Scene {
         onComplete: () => resolve(),
       });
     });
+  }
+
+  /** A short-lived glow burst per cleared tile, tinted to that sweet's accent colour — the
+   *  "juice" that makes a match feel like it popped rather than just vanished. */
+  private emitMatchBurst(cells: CellPos[]): void {
+    for (const c of cells) {
+      const tile = this.board.cells[c.row]?.[c.col];
+      const color = tile && !tile.blocker ? SWEET_ACCENT_COLOR[tile.sweet] : 0xffe066;
+      const { x, y } = this.cellToWorld(c);
+      const emitter = this.add.particles(x, y, GLOW_PARTICLE_TEXTURE_KEY, {
+        lifespan: 360,
+        speed: { min: 60, max: 150 },
+        scale: { start: (this.tileSize / 128) * 0.55, end: 0 },
+        alpha: { start: 0.9, end: 0 },
+        tint: color,
+        quantity: 6,
+        emitting: false,
+      });
+      emitter.explode(6);
+      this.time.delayedCall(420, () => emitter.destroy());
+    }
   }
 
   private popupText(x: number, y: number, text: string, color: string): void {

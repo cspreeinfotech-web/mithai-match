@@ -48,6 +48,13 @@ const STRINGS = {
   start: { en: 'START', 'hi-roman': 'SHURU' },
   coins: { en: 'Coins', 'hi-roman': 'Sikke' },
   lives: { en: 'Lives', 'hi-roman': 'Jaan' },
+  playingAsGuest: { en: 'Playing as Guest', 'hi-roman': 'Guest ke roop mein khel rahe ho' },
+  signInWithEmail: { en: 'Sign in with Email', 'hi-roman': 'Email se Sign In Karo' },
+  signInWithGoogle: { en: 'Sign in with Google (soon)', 'hi-roman': 'Google se Sign In (jald hi)' },
+  signedInAs: { en: 'Signed in:', 'hi-roman': 'Sign in ho gaye:' },
+  googleComingSoon: { en: 'Google sign-in coming soon', 'hi-roman': 'Google sign-in jald aayega' },
+  codeSent: { en: 'Code sent — check your email', 'hi-roman': 'Code bhej diya — email dekho' },
+  signedInToast: { en: 'Signed in!', 'hi-roman': 'Sign in ho gaye!' },
 } as const;
 
 export type StringKey = keyof typeof STRINGS;
