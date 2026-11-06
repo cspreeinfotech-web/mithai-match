@@ -26,7 +26,7 @@ This app is not directed at children and does not knowingly collect data from ch
 
 ## Contact
 
-[YOUR CONTACT EMAIL]
+help.mithaimatch@gmail.com
 
 ---
 

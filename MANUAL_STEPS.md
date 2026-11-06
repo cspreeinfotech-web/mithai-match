@@ -105,5 +105,15 @@ so you can test purchases without being charged real money.
 - **Google Play Console**: creating the app, uploading the first AAB to Internal testing, adding license testers (see Phase 6 above for the 6 products specifically).
 - **Release keystore**: generate it yourself (`keytool`) and add it + 3 passwords as 4 GitHub Actions secrets (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`). I will never generate or hold this keystore for you — back it up yourself; losing it means you can never update the app on Play again (unless you're on Play App Signing, which is why you should opt into it).
 - **Hosting the privacy policy** at a public URL and filling in the Data Safety form / content rating.
+- **Play Console store listing "Support email"** and the Data Safety form's contact field: use `help.mithaimatch@gmail.com` (same address as `PRIVACY_POLICY.md`'s Contact section and the in-app Settings screen).
 - **Changing the application ID / app name / icon** away from the placeholder `com.example.mithaimatch`.
 - **AdMob** app creation and real ad unit IDs, if you ever flip `ENABLE_ADS` on.
+
+## Background music
+
+Done. `src/assets/audio/bg-music-loop.wav` is "Happy Clappy Loop" by OwlishMedia
+(opengameart.org/content/happy-clappy-loop), **CC0 (public domain)** — free for any use,
+including commercial, with no attribution required. `sound.startMusic()`/`stopMusic()` loop it
+via WebAudio at a lower gain than SFX, and the Settings screen's Music toggle starts/stops it
+live. If you'd rather use a different track, swap that file and keep the same filename — no
+code changes needed.

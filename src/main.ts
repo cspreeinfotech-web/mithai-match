@@ -7,6 +7,8 @@ import { ShopScene } from './game/scenes/ShopScene';
 import { SettingsScene } from './game/scenes/SettingsScene';
 import { StoreScene } from './game/scenes/StoreScene';
 import { GameScene } from './game/scenes/GameScene';
+import { PlansScene } from './game/scenes/PlansScene';
+import { PaymentHistoryScene } from './game/scenes/PaymentHistoryScene';
 import { initCloudSync } from './services/cloudSync';
 import { billing } from './services/billing';
 
@@ -21,7 +23,7 @@ const config: Phaser.Types.Core.GameConfig = {
     width: 720,
     height: 1280,
   },
-  scene: [BootScene, MenuScene, MapScene, ShopScene, SettingsScene, StoreScene, GameScene],
+  scene: [BootScene, MenuScene, MapScene, ShopScene, SettingsScene, StoreScene, GameScene, PlansScene, PaymentHistoryScene],
 };
 
 const game = new Phaser.Game(config);

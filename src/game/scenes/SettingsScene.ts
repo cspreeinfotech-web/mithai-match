@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
-import { APP_NAME } from '../../config/app.config';
+import { APP_NAME, SUPPORT_EMAIL } from '../../config/app.config';
 import { loadProfile, saveProfile } from '../../services/profile';
 import { t } from '../../services/i18n';
 import { makeButton, THEME } from '../ui';
 import { billing } from '../../services/billing';
+import { sound } from '../../services/sound';
 import { getAuthStatus, requestEmailCode, verifyEmailCode, type AuthStatus } from '../../services/accountAuth';
 
 
@@ -65,6 +66,8 @@ export class SettingsScene extends Phaser.Scene {
     });
     row(t('music', lang), profile.musicOn ? 'ON' : 'OFF', () => {
       saveProfile({ ...profile, musicOn: !profile.musicOn });
+      if (profile.musicOn) sound.stopMusic();
+      else sound.startMusic();
       this.redraw();
     });
     row(t('haptics', lang), profile.hapticsOn ? 'ON' : 'OFF', () => {
@@ -92,6 +95,15 @@ export class SettingsScene extends Phaser.Scene {
       .text(width / 2, y, t('privacyPolicy', lang) + ' (see PRIVACY_POLICY.md)', {
         fontFamily: 'sans-serif',
         fontSize: '16px',
+        color: THEME.subtleText,
+      })
+      .setOrigin(0.5);
+    y += 32;
+
+    this.add
+      .text(width / 2, y, `${t('support', lang)}: ${SUPPORT_EMAIL}`, {
+        fontFamily: 'sans-serif',
+        fontSize: '14px',
         color: THEME.subtleText,
       })
       .setOrigin(0.5);

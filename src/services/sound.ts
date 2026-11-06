@@ -1,10 +1,20 @@
-// Audio service. I can't legally source or generate finished music/SFX files in this
-// environment, so every sound is a silent placeholder (a near-zero-length WebAudio buffer) —
-// the service itself, the toggles, and every call site are real and wired; only the actual
-// audio content is missing. See ASSUMPTIONS.md and the filename list below for exactly what
-// to supply (drop files at those paths under src/assets/audio/ with the same names and they
-// start playing with zero code changes — see loadSound()'s TODO).
+// Audio service. Every SFX is an original, procedurally-rendered sound (src/assets/audio/) —
+// no copied/ripped audio from any other game. Background music is a CC0 (public domain) loop
+// from OpenGameArt.org ("Happy Clappy Loop" by OwlishMedia). WebAudio decodes + caches each
+// buffer on first use and plays it instantly on repeat calls.
 import { loadProfile } from './profile';
+import swapUrl from '../assets/audio/sfx-swap.wav';
+import invalidUrl from '../assets/audio/sfx-invalid.wav';
+import matchUrl from '../assets/audio/sfx-match.wav';
+import cascadeUrl from '../assets/audio/sfx-cascade.wav';
+import specialCreateUrl from '../assets/audio/sfx-special-create.wav';
+import specialFireUrl from '../assets/audio/sfx-special-fire.wav';
+import winUrl from '../assets/audio/sfx-win.wav';
+import failUrl from '../assets/audio/sfx-fail.wav';
+import buttonUrl from '../assets/audio/sfx-button.wav';
+import coinUrl from '../assets/audio/sfx-coin.wav';
+import boosterUrl from '../assets/audio/sfx-booster.wav';
+import musicUrl from '../assets/audio/bg-music-loop.wav';
 
 export type SfxKey =
   | 'swap'
@@ -19,27 +29,27 @@ export type SfxKey =
   | 'coin'
   | 'booster';
 
-/** Exact filenames to drop into src/assets/audio/ (MP3 or OGG, short + punchy for SFX,
- *  loopable for music). Nothing else needs to change once these exist — see loadSound(). */
-export const REQUIRED_AUDIO_FILES = {
-  music: ['bg-music-loop.mp3'],
-  sfx: [
-    'sfx-swap.mp3',
-    'sfx-invalid.mp3',
-    'sfx-match.mp3',
-    'sfx-cascade.mp3',
-    'sfx-special-create.mp3',
-    'sfx-special-fire.mp3',
-    'sfx-win.mp3',
-    'sfx-fail.mp3',
-    'sfx-button.mp3',
-    'sfx-coin.mp3',
-    'sfx-booster.mp3',
-  ],
-} as const;
+const SFX_URLS: Record<SfxKey, string> = {
+  swap: swapUrl,
+  invalid: invalidUrl,
+  match: matchUrl,
+  cascade: cascadeUrl,
+  'special-create': specialCreateUrl,
+  'special-fire': specialFireUrl,
+  win: winUrl,
+  fail: failUrl,
+  button: buttonUrl,
+  coin: coinUrl,
+  booster: boosterUrl,
+};
 
 class SoundService {
   private ctx: AudioContext | null = null;
+  private buffers = new Map<SfxKey, AudioBuffer>();
+  private loading = new Map<SfxKey, Promise<AudioBuffer | null>>();
+  private musicBuffer: AudioBuffer | null = null;
+  private musicLoading: Promise<AudioBuffer | null> | null = null;
+  private musicSource: AudioBufferSourceNode | null = null;
 
   private getContext(): AudioContext | null {
     if (this.ctx) return this.ctx;
@@ -51,21 +61,73 @@ class SoundService {
     }
   }
 
-  /** Plays a sound effect if Settings -> Sound is on. Currently always silent (see file
-   *  header) — swap in a real decoded buffer here once REQUIRED_AUDIO_FILES exist. */
-  playSfx(_key: SfxKey): void {
+  private decode(ctx: AudioContext, url: string): Promise<AudioBuffer | null> {
+    return fetch(url)
+      .then((res) => res.arrayBuffer())
+      .then((data) => ctx.decodeAudioData(data))
+      .catch(() => null); // a missing/corrupt file just means that sound stays silent
+  }
+
+  private loadBuffer(ctx: AudioContext, key: SfxKey): Promise<AudioBuffer | null> {
+    const cached = this.buffers.get(key);
+    if (cached) return Promise.resolve(cached);
+    const inFlight = this.loading.get(key);
+    if (inFlight) return inFlight;
+
+    const promise = this.decode(ctx, SFX_URLS[key]).then((buffer) => {
+      if (buffer) this.buffers.set(key, buffer);
+      return buffer;
+    });
+    this.loading.set(key, promise);
+    return promise;
+  }
+
+  playSfx(key: SfxKey): void {
     if (!loadProfile().soundOn) return;
-    // TODO once audio files exist: decode and play `src/assets/audio/${REQUIRED_AUDIO_FILES...}`.
-    // Left as a no-op placeholder rather than faking a sound.
+    const ctx = this.getContext();
+    if (!ctx) return;
+    void this.loadBuffer(ctx, key).then((buffer) => {
+      if (!buffer) return;
+      if (ctx.state === 'suspended') void ctx.resume(); // mobile browsers suspend until a user gesture
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start();
+    });
   }
 
   startMusic(): void {
-    if (!loadProfile().musicOn) return;
-    // TODO once bg-music-loop.mp3 exists: decode, loop, and respect the musicOn toggle live.
+    if (!loadProfile().musicOn || this.musicSource) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const play = (buffer: AudioBuffer) => {
+      if (!loadProfile().musicOn || this.musicSource) return; // toggle may have flipped mid-load
+      if (ctx.state === 'suspended') void ctx.resume();
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+      const gain = ctx.createGain();
+      gain.gain.value = 0.35; // sits under SFX, never drowns them out
+      source.connect(gain).connect(ctx.destination);
+      source.start();
+      this.musicSource = source;
+    };
+
+    if (this.musicBuffer) {
+      play(this.musicBuffer);
+      return;
+    }
+    this.musicLoading ??= this.decode(ctx, musicUrl).then((buffer) => {
+      this.musicBuffer = buffer;
+      return buffer;
+    });
+    void this.musicLoading.then((buffer) => buffer && play(buffer));
   }
 
   stopMusic(): void {
-    // No-op until real music playback exists.
+    this.musicSource?.stop();
+    this.musicSource = null;
   }
 }
 

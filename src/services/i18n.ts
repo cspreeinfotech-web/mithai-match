@@ -55,6 +55,23 @@ const STRINGS = {
   googleComingSoon: { en: 'Google sign-in coming soon', 'hi-roman': 'Google sign-in jald aayega' },
   codeSent: { en: 'Code sent — check your email', 'hi-roman': 'Code bhej diya — email dekho' },
   signedInToast: { en: 'Signed in!', 'hi-roman': 'Sign in ho gaye!' },
+  plans: { en: 'Plans', 'hi-roman': 'Plans' },
+  buyNow: { en: 'Buy', 'hi-roman': 'Khareedo' },
+  claimFree: { en: 'Claim free', 'hi-roman': 'Free mein lo' },
+  alreadyActive: { en: 'Active until', 'hi-roman': 'Tab tak chalega' },
+  planUnavailable: { en: 'Payments unavailable right now', 'hi-roman': 'Abhi payment possible nahi hai' },
+  freeModeActive: { en: 'Everything is free right now!', 'hi-roman': 'Abhi sab kuch free hai!' },
+  paymentSuccess: { en: 'Payment successful', 'hi-roman': 'Payment ho gaya' },
+  paymentPending: { en: "We're verifying your payment, usually within a few hours", 'hi-roman': 'Payment verify ho raha hai, kuch ghanton mein ho jayega' },
+  paymentFailed: { en: 'Payment failed', 'hi-roman': 'Payment fail ho gaya' },
+  close: { en: 'Close', 'hi-roman': 'Band karo' },
+  noUpiAppMsg: { en: 'Install GPay, PhonePe or Paytm to pay', 'hi-roman': 'GPay, PhonePe ya Paytm install karo' },
+  paymentHistory: { en: 'Payment History', 'hi-roman': 'Payment History' },
+  copied: { en: 'Copied!', 'hi-roman': 'Copy ho gaya!' },
+  reference: { en: 'Reference', 'hi-roman': 'Reference' },
+  loading: { en: 'Loading...', 'hi-roman': 'Load ho raha hai...' },
+  alreadyClaimedPlan: { en: "You've already claimed this", 'hi-roman': 'Yeh pehle hi le liya hai' },
+  support: { en: 'Support', 'hi-roman': 'Support' },
 } as const;
 
 export type StringKey = keyof typeof STRINGS;

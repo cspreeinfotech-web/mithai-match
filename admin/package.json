@@ -1,0 +1,26 @@
+{
+  "name": "mithai-match-admin",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.4.5",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "@supabase/ssr": "0.8.0",
+    "@supabase/supabase-js": "2.76.1"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.6",
+    "@types/react-dom": "19.2.1",
+    "tailwindcss": "4.1.16",
+    "@tailwindcss/postcss": "4.1.16"
+  }
+}

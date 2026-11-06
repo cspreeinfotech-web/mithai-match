@@ -9,10 +9,16 @@ import appConfig from './app.config.json';
 // Supabase ANDROID_PACKAGE_NAME secret used by verify-purchase).
 export const APP_NAME = appConfig.appName;
 export const APP_ID = appConfig.appId;
+export const SUPPORT_EMAIL = appConfig.supportEmail;
 
 // Feature flags.
 export const ENABLE_ADS = false;
 export const ENABLE_GOOGLE_SIGNIN = false;
+
+// UPI for digital goods isn't allowed on Google Play unless enrolled in user choice billing.
+// Build the Play Store AAB with VITE_PLAY_STORE=true (hides prices and the UPI flow); ship
+// UPI only in the separately-distributed website APK, built with this unset/false.
+export const PLAY_STORE = import.meta.env.VITE_PLAY_STORE === 'true';
 
 // Set true only in local/dev builds (never in a release build) to use MockBilling
 // instead of real Google Play Billing.

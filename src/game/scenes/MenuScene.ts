@@ -6,6 +6,7 @@ import { loadProfile, saveProfile, addCoins, addBooster } from '../../services/p
 import { syncDailyClaim } from '../../services/cloudSync';
 import { t } from '../../services/i18n';
 import { makeButton, makeModalOverlay, THEME } from '../ui';
+import { PLAY_STORE } from '../../config/app.config';
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -49,7 +50,12 @@ export class MenuScene extends Phaser.Scene {
 
     makeButton(this, width / 2, height * 0.62, `🏪 ${t('shop', lang)}`, () => this.scene.start('Shop'), { fontSize: '22px' });
     makeButton(this, width / 2, height * 0.7, '🪙 Store', () => this.scene.start('Store'), { fontSize: '22px' });
-    makeButton(this, width / 2, height * 0.78, `⚙ ${t('settings', lang)}`, () => this.scene.start('Settings'), { fontSize: '22px' });
+    // UPI payments for digital goods aren't allowed on Play unless enrolled in user choice
+    // billing — hidden entirely in the Play Store build, shown only in the website APK.
+    if (!PLAY_STORE) {
+      makeButton(this, width / 2, height * 0.78, `💳 ${t('plans', lang)}`, () => this.scene.start('Plans'), { fontSize: '22px' });
+    }
+    makeButton(this, width / 2, height * (PLAY_STORE ? 0.78 : 0.86), `⚙ ${t('settings', lang)}`, () => this.scene.start('Settings'), { fontSize: '22px' });
   }
 
   private showDailyRewardPopup(): void {
