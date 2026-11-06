@@ -11,6 +11,7 @@ import { PlansScene } from './game/scenes/PlansScene';
 import { PaymentHistoryScene } from './game/scenes/PaymentHistoryScene';
 import { initCloudSync } from './services/cloudSync';
 import { billing } from './services/billing';
+import { sound } from './services/sound';
 
 // Portrait-only, safe-area-aware, letterboxed scaling (small phones to tablets).
 const config: Phaser.Types.Core.GameConfig = {
@@ -41,5 +42,15 @@ App.addListener('backButton', () => {
   } else if (active?.scene.key === 'Menu') {
     void App.exitApp();
   }
+});
+
+// Bug fix: music/SFX kept playing after backgrounding the app, because our AudioContext is
+// independent of Phaser's own sound manager and nothing else stops it. 'pause'/'resume' cover
+// native Android (home button, app switcher); visibilitychange covers the browser/dev preview.
+App.addListener('pause', () => sound.suspendAll());
+App.addListener('resume', () => sound.resumeAll());
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) sound.suspendAll();
+  else sound.resumeAll();
 });
 

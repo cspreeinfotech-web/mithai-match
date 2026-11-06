@@ -129,6 +129,17 @@ class SoundService {
     this.musicSource?.stop();
     this.musicSource = null;
   }
+
+  // Our AudioContext is independent of Phaser's own sound manager, so nothing stops it when
+  // the app backgrounds unless we do it ourselves — this is what main.ts's app-lifecycle
+  // listeners call, so music/SFX don't keep playing after the player leaves the app.
+  suspendAll(): void {
+    if (this.ctx && this.ctx.state === 'running') void this.ctx.suspend();
+  }
+
+  resumeAll(): void {
+    if (this.ctx && this.ctx.state === 'suspended') void this.ctx.resume();
+  }
 }
 
 export const sound = new SoundService();

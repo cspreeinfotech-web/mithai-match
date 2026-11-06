@@ -41,6 +41,8 @@ function drawLaddu(g: Phaser.GameObjects.Graphics): void {
   g.fillStyle(0x8a4406, 1);
   const flecks = [[-18, -4], [10, -20], [20, 14], [-4, 22], [0, -2]];
   for (const [dx, dy] of flecks) g.fillCircle(CENTER + dx!, CENTER + dy!, 3);
+  g.lineStyle(2.5, 0x8a4406, 0.7);
+  g.strokeCircle(CENTER, CENTER, 52);
 }
 
 function drawJalebi(g: Phaser.GameObjects.Graphics): void {
@@ -67,6 +69,8 @@ function drawGulabJamun(g: Phaser.GameObjects.Graphics): void {
   g.fillEllipse(CENTER, CENTER, 92, 76);
   g.fillStyle(0x7a342a, 1);
   g.fillEllipse(CENTER - 8, CENTER - 10, 50, 36);
+  g.lineStyle(2.5, 0x3a1109, 0.7);
+  g.strokeEllipse(CENTER, CENTER, 92, 76);
 }
 
 function drawBarfi(g: Phaser.GameObjects.Graphics): void {
@@ -93,8 +97,10 @@ function drawRasgulla(g: Phaser.GameObjects.Graphics): void {
 }
 
 function drawKajuKatli(g: Phaser.GameObjects.Graphics): void {
-  // Diamond, silver/cream, with a faint foil shimmer line.
-  g.fillStyle(0xd9d2c4, 1);
+  // Diamond, warm gold-silver with a pink foil corner — previously near-monochrome grey,
+  // which read as a generic "locked" icon rather than a sweet; the gold border + blush
+  // accent fix that at a glance.
+  g.fillStyle(0xf0dca0, 1);
   g.fillPoints(
     [
       { x: CENTER, y: CENTER - 52 },
@@ -104,7 +110,7 @@ function drawKajuKatli(g: Phaser.GameObjects.Graphics): void {
     ],
     true,
   );
-  g.fillStyle(0xf3efe3, 1);
+  g.fillStyle(0xfff6de, 1);
   g.fillPoints(
     [
       { x: CENTER, y: CENTER - 30 },
@@ -114,8 +120,20 @@ function drawKajuKatli(g: Phaser.GameObjects.Graphics): void {
     ],
     true,
   );
-  g.lineStyle(2, 0xb8ad94, 1);
-  g.strokeLineShape(new Phaser.Geom.Line(CENTER - 20, CENTER - 20, CENTER + 20, CENTER + 20));
+  g.fillStyle(0xff8fc0, 0.55);
+  g.fillTriangle(CENTER - 46, CENTER, CENTER - 20, CENTER - 8, CENTER - 20, CENTER + 8);
+  g.lineStyle(3, 0xd9a638, 1);
+  g.strokePoints(
+    [
+      { x: CENTER, y: CENTER - 52 },
+      { x: CENTER + 46, y: CENTER },
+      { x: CENTER, y: CENTER + 52 },
+      { x: CENTER - 46, y: CENTER },
+    ],
+    true,
+  );
+  g.lineStyle(2, 0xffffff, 0.8);
+  g.strokeLineShape(new Phaser.Geom.Line(CENTER - 18, CENTER - 22, CENTER + 18, CENTER + 22));
 }
 
 const SWEET_DRAWERS: Record<SweetType, (g: Phaser.GameObjects.Graphics) => void> = {
@@ -191,12 +209,13 @@ export function generateGameTextures(scene: Phaser.Scene): void {
 
   // Glossy rounded "tray" sat behind every sweet, plus a soft diagonal shine on top of it —
   // the two things that make flat shapes read as polished, tactile tiles instead of stickers.
+  // Warm lavender-gold gradient + a gold border (not plain grey/white) for a premium feel.
   soften(scene, TILE_BG_TEXTURE_KEY, (g) => {
-    g.fillStyle(0x000000, 0.12);
+    g.fillStyle(0x3a1a5c, 0.18);
     g.fillRoundedRect(6, 10, SIZE - 12, SIZE - 12, 22);
-    g.fillGradientStyle(0xfffaf0, 0xfffaf0, 0xeedcb8, 0xeedcb8, 1);
+    g.fillGradientStyle(0xfff6e0, 0xfff6e0, 0xf3dcf0, 0xf3dcf0, 1);
     g.fillRoundedRect(4, 4, SIZE - 8, SIZE - 10, 22);
-    g.lineStyle(2, 0xffffff, 0.6);
+    g.lineStyle(2.5, 0xf5be48, 0.85);
     g.strokeRoundedRect(4, 4, SIZE - 8, SIZE - 10, 22);
   });
   soften(scene, TILE_SHINE_TEXTURE_KEY, (g) => {
