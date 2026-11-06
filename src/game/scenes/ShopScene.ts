@@ -42,11 +42,14 @@ export class ShopScene extends Phaser.Scene {
           .text(width - 40, y, t('owned', lang), { fontFamily: 'sans-serif', fontSize: '18px', color: '#2f7a4f' })
           .setOrigin(1, 0.5);
       } else {
-        makeButton(this, width - 100, y, `${t('buy', lang)} ${deco.cost}🪙`, () => {
+        // Positioned after creation: the label's width varies with the coin cost's digit
+        // count, so a fixed x would let a 4-digit price push the button off the right edge.
+        const buyBtn = makeButton(this, 0, y, `${t('buy', lang)} ${deco.cost}🪙`, () => {
           const result = buyDecoration(profile, deco.id, deco.cost);
           if (result) this.redraw();
           else this.showToast(t('notEnoughCoins', lang));
         }, { fontSize: '16px' });
+        buyBtn.x = width - 40 - buyBtn.width / 2;
       }
       y += 70;
     }

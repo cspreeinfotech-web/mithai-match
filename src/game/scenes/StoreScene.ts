@@ -92,7 +92,11 @@ export class StoreScene extends Phaser.Scene {
         .setOrigin(0, 0.5);
     }
 
-    makeButton(this, cx + cardWidth / 2 - 70, y, price, () => this.buy(productId), { fontSize: '20px' });
+    // Positioned after creation (not a fixed offset): price text varies in width ("₹29" vs
+    // "₹299 (mock)"), so a fixed anchor let wider buttons poke past the card's right edge.
+    const buyBtn = makeButton(this, 0, y, price, () => this.buy(productId), { fontSize: '20px' });
+    const rightInset = 28;
+    buyBtn.x = cx + cardWidth / 2 - rightInset - buyBtn.width / 2;
   }
 
   private async buy(productId: string): Promise<void> {
