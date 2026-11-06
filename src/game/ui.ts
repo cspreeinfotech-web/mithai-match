@@ -88,6 +88,15 @@ export function makeButton(
   return container;
 }
 
+// Fills the viewport with an illustrated background image, cropped to cover (never letterboxed)
+// like CSS background-size:cover — the source art is portrait (768x1376) but screens vary.
+export function addCoverBackground(scene: Phaser.Scene, textureKey: string): Phaser.GameObjects.Image {
+  const { width, height } = scene.scale;
+  const tex = scene.textures.get(textureKey).getSourceImage();
+  const scale = Math.max(width / tex.width, height / tex.height);
+  return scene.add.image(width / 2, height / 2, textureKey).setScale(scale);
+}
+
 export function makeModalOverlay(scene: Phaser.Scene): { overlay: Phaser.GameObjects.Rectangle; panel: Phaser.GameObjects.Container } {
   const { width, height } = scene.scale;
   const overlay = scene.add.rectangle(0, 0, width, height, THEME.overlay, 0.78).setOrigin(0, 0).setInteractive();

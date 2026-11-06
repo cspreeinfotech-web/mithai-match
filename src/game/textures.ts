@@ -7,6 +7,8 @@ const SIZE = 128;
 const CENTER = SIZE / 2;
 
 export const SWEET_TEXTURE_KEY = (s: SweetType): string => `sweet-${s}`;
+export const BOOSTER_TEXTURE_KEY = (b: 'hammer' | 'shuffle'): string => `booster-${b}`;
+export const BACKGROUND_KEY = (b: 'home' | 'levelmap'): string => `bg-${b}`;
 export const SPECIAL_TEXTURE_KEY = (s: 'striped-h' | 'striped-v' | 'colorbomb' | 'wrapped'): string => `special-${s}`;
 export const BLOCKER_TEXTURE_KEY = (b: 'ice1' | 'ice2' | 'locked' | 'honey'): string => `blocker-${b}`;
 export const INGREDIENT_TEXTURE_KEY = 'ingredient-badge';

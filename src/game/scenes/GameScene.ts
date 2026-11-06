@@ -38,6 +38,7 @@ import {
   TILE_SHINE_TEXTURE_KEY,
   GLOW_PARTICLE_TEXTURE_KEY,
   SWEET_ACCENT_COLOR,
+  BOOSTER_TEXTURE_KEY,
 } from '../textures';
 
 const HUD_HEIGHT = 200;
@@ -184,8 +185,8 @@ export class GameScene extends Phaser.Scene {
       .setOrigin(0.5, 0);
 
     this.makeIconButton(width - 44, 150, '⏸', () => this.showPausePopup());
-    this.makeIconButton(44, 150, '🔨', () => this.armHammer());
-    this.makeIconButton(104, 150, '🔀', () => this.useShuffleBooster());
+    this.makeIconButton(44, 150, '🔨', () => this.armHammer(), BOOSTER_TEXTURE_KEY('hammer'));
+    this.makeIconButton(104, 150, '🔀', () => this.useShuffleBooster(), BOOSTER_TEXTURE_KEY('shuffle'));
 
     this.boosterText = this.add
       .text(this.scale.width / 2, 190, '', { fontFamily: 'sans-serif', fontSize: '13px', color: '#fff2de' })
@@ -196,7 +197,7 @@ export class GameScene extends Phaser.Scene {
 
   /** Small glossy circular button used for the HUD's icon actions (pause/hammer/shuffle) —
    *  kept local to GameScene since the gameplay-HUD polish pass is scoped to this screen. */
-  private makeIconButton(x: number, y: number, label: string, onClick: () => void): Phaser.GameObjects.Container {
+  private makeIconButton(x: number, y: number, label: string, onClick: () => void, iconKey?: string): Phaser.GameObjects.Container {
     const radius = 26;
     const g = this.add.graphics();
     g.fillStyle(0x000000, 0.18);
@@ -205,7 +206,9 @@ export class GameScene extends Phaser.Scene {
     g.fillCircle(0, 0, radius);
     g.lineStyle(2, 0xffffff, 0.9);
     g.strokeCircle(0, 0, radius);
-    const icon = this.add.text(0, -1, label, { fontSize: '24px' }).setOrigin(0.5);
+    const icon = iconKey
+      ? this.add.image(0, 0, iconKey).setDisplaySize(radius * 1.3, radius * 1.3)
+      : this.add.text(0, -1, label, { fontSize: '24px' }).setOrigin(0.5);
     const container = this.add.container(x, y, [g, icon]);
     container.setSize(radius * 2, radius * 2);
     container.setInteractive(new Phaser.Geom.Circle(0, 0, radius), Phaser.Geom.Circle.Contains);

@@ -4,9 +4,10 @@ import { LEVELS } from '../../levels';
 import { regenerateLives } from '../../core';
 import { loadProfile, saveProfile, spendCoins, addBooster, useBooster } from '../../services/profile';
 import { t } from '../../services/i18n';
-import { makeButton, makeModalOverlay, makeModalCard, THEME } from '../ui';
+import { makeButton, makeModalOverlay, makeModalCard, addCoverBackground, THEME } from '../ui';
 import { billing } from '../../services/billing';
 import { getProduct } from '../../config/products.config';
+import { BACKGROUND_KEY } from '../textures';
 
 const NODE_SPACING_Y = 120;
 const ZIGZAG_X = 90;
@@ -22,21 +23,24 @@ export class MapScene extends Phaser.Scene {
     const profile = saveProfileWithRegen();
     const lang = profile.language;
 
-    this.add.rectangle(0, 0, width, height, THEME.background).setOrigin(0, 0);
+    addCoverBackground(this, BACKGROUND_KEY('levelmap'));
+    // The illustrated garden background is busy, unlike the old flat cream fill — header text
+    // switches to white with a dark drop shadow so it stays readable over it.
     this.add
-      .text(width / 2, 20, t('levelMap', lang), { fontFamily: 'sans-serif', fontSize: '30px', color: THEME.accent, fontStyle: 'bold' })
+      .text(width / 2, 20, t('levelMap', lang), { fontFamily: 'sans-serif', fontSize: '30px', color: '#ffffff', fontStyle: 'bold' })
       .setOrigin(0.5, 0)
-      .setShadow(0, 2, '#ffffffaa', 0, false, true);
+      .setShadow(0, 2, '#2a1046', 6, false, true);
     makeButton(this, width - 50, 44, '✕', () => this.scene.start('Menu'), { fontSize: '22px', bg: THEME.royalPurple });
 
     this.add
       .text(20, 48, `🪙 ${profile.coins}   ❤ ${profile.lives}/${ECONOMY.maxLives}`, {
         fontFamily: 'sans-serif',
         fontSize: '18px',
-        color: THEME.text,
+        color: '#ffffff',
         fontStyle: 'bold',
       })
-      .setOrigin(0, 0.5);
+      .setOrigin(0, 0.5)
+      .setShadow(0, 1, '#2a1046', 4, false, true);
 
     const listTop = 120;
     const container = this.add.container(0, 0);

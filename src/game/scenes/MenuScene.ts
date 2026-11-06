@@ -5,8 +5,9 @@ import { canClaimDaily, claimDaily } from '../../core';
 import { loadProfile, saveProfile, addCoins, addBooster } from '../../services/profile';
 import { syncDailyClaim } from '../../services/cloudSync';
 import { t } from '../../services/i18n';
-import { makeButton, makeModalOverlay, THEME } from '../ui';
+import { makeButton, makeModalOverlay, addCoverBackground, THEME } from '../ui';
 import { PLAY_STORE } from '../../config/app.config';
+import { BACKGROUND_KEY } from '../textures';
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -23,18 +24,27 @@ export class MenuScene extends Phaser.Scene {
     const profile = loadProfile();
     const lang = profile.language;
 
-    this.add.rectangle(0, 0, width, height, THEME.background).setOrigin(0, 0);
+    addCoverBackground(this, BACKGROUND_KEY('home'));
 
-    this.add.text(width / 2, height * 0.16, APP_NAME, { fontFamily: 'Georgia, serif', fontSize: '56px', color: THEME.accent }).setOrigin(0.5);
-    this.add.text(width / 2, height * 0.23, t('tagline', lang), { fontFamily: 'sans-serif', fontSize: '22px', color: THEME.subtleText }).setOrigin(0.5);
+    // The illustrated palace background is busy/dark, unlike the old flat cream fill — title
+    // and status text switch to white with a drop shadow so they stay readable over it.
+    this.add
+      .text(width / 2, height * 0.16, APP_NAME, { fontFamily: 'Georgia, serif', fontSize: '56px', color: '#ffffff', fontStyle: 'bold' })
+      .setOrigin(0.5)
+      .setShadow(0, 2, '#2a1046', 6, false, true);
+    this.add
+      .text(width / 2, height * 0.23, t('tagline', lang), { fontFamily: 'sans-serif', fontSize: '22px', color: '#ffe6a8' })
+      .setOrigin(0.5)
+      .setShadow(0, 1, '#2a1046', 4, false, true);
 
     this.add
       .text(width / 2, height * 0.3, `🪙 ${profile.coins}   ❤ ${profile.lives}/${ECONOMY.maxLives}`, {
         fontFamily: 'sans-serif',
         fontSize: '20px',
-        color: THEME.text,
+        color: '#ffffff',
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setShadow(0, 1, '#2a1046', 4, false, true);
 
     makeButton(this, width / 2, height * 0.44, t('play', lang), () => this.scene.start('Map'), { fontSize: '42px' });
 
