@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { loadProfile } from '../../services/profile';
 import { t } from '../../services/i18n';
 import { makeButton, THEME } from '../ui';
-import { myPaymentOrders, type PaymentOrder } from '../../services/payments';
+import { myPaymentOrders, grantOrderOnce, type PaymentOrder } from '../../services/payments';
 
 export class PaymentHistoryScene extends Phaser.Scene {
   private orders: PaymentOrder[] = [];
@@ -15,6 +15,7 @@ export class PaymentHistoryScene extends Phaser.Scene {
     this.redraw();
     void myPaymentOrders().then((orders) => {
       this.orders = orders;
+      orders.forEach(grantOrderOnce); // catches a 'pending' order that was approved on manual review since the last visit
       this.redraw();
     });
   }

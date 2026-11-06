@@ -6,6 +6,7 @@ import { makeButton, THEME } from '../ui';
 import { billing } from '../../services/billing';
 import { sound } from '../../services/sound';
 import { getAuthStatus, requestEmailCode, verifyEmailCode, type AuthStatus } from '../../services/accountAuth';
+import { domPrompt } from '../../services/domPrompt';
 
 
 export class SettingsScene extends Phaser.Scene {
@@ -118,12 +119,12 @@ export class SettingsScene extends Phaser.Scene {
       .setOrigin(0.5);
   }
 
-  // shortcut: window.prompt() for email/code entry instead of an on-screen keyboard UI —
-  // works fine in the Android WebView, upgrade to an in-scene text input if that ever feels cheap.
+  // window.prompt() doesn't work in Capacitor's Android WebView (it's unimplemented there and
+  // returns null instantly, so the dialog never even appears) — domPrompt draws a real input.
   private async handleEmailSignIn(): Promise<void> {
     const profile = loadProfile();
     const lang = profile.language;
-    const email = window.prompt('Enter your email:')?.trim();
+    const email = (await domPrompt('Enter your email:', { inputType: 'email', placeholder: 'you@example.com' }))?.trim();
     if (!email) return;
     const sent = await requestEmailCode(email);
     if (!sent.ok) {
@@ -131,7 +132,7 @@ export class SettingsScene extends Phaser.Scene {
       return;
     }
     this.showToast(t('codeSent', lang));
-    const code = window.prompt('Enter the 6-digit code we emailed you:')?.trim();
+    const code = (await domPrompt('Enter the 6-digit code we emailed you:', { inputType: 'tel', placeholder: '123456' }))?.trim();
     if (!code) return;
     const verified = await verifyEmailCode(email, code, sent.linking);
     if (!verified.ok) {

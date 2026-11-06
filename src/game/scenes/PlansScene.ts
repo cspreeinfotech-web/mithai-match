@@ -3,14 +3,13 @@ import { loadProfile } from '../../services/profile';
 import { t } from '../../services/i18n';
 import { makeButton, makeModalOverlay, THEME } from '../ui';
 import { getSupabase } from '../../services/supabaseClient';
-import { plansForMe, buyPlan, claimFreePlan, type Plan, type PaymentOrder } from '../../services/payments';
+import { plansForMe, buyPlan, claimFreePlan, grantOrderOnce, type Plan, type PaymentOrder } from '../../services/payments';
 
 type LoadState = 'loading' | 'error' | 'loaded';
 
 export class PlansScene extends Phaser.Scene {
   private loadState: LoadState = 'loading';
   private plans: Plan[] = [];
-  private subscriptionEndsAt: string | null = null;
 
   constructor() {
     super('Plans');
@@ -35,15 +34,7 @@ export class PlansScene extends Phaser.Scene {
     this.loadState = 'loading';
     this.redraw();
     try {
-      const [plans, supabase] = await Promise.all([plansForMe(), Promise.resolve(getSupabase())]);
-      this.plans = plans;
-      if (supabase) {
-        const { data } = await supabase.auth.getUser();
-        if (data.user) {
-          const { data: sub } = await supabase.from('subscriptions').select('ends_at').eq('user_id', data.user.id).maybeSingle();
-          this.subscriptionEndsAt = sub?.ends_at ?? null;
-        }
-      }
+      this.plans = await plansForMe();
       this.loadState = 'loaded';
     } catch {
       this.loadState = 'error';
@@ -59,6 +50,7 @@ export class PlansScene extends Phaser.Scene {
 
     this.add.rectangle(0, 0, width, height, THEME.background).setOrigin(0, 0);
     this.add.text(20, 20, t('plans', lang), { fontFamily: 'sans-serif', fontSize: '30px', color: THEME.accent }).setOrigin(0, 0);
+    this.add.text(20, 56, `🪙 ${profile.coins}`, { fontFamily: 'sans-serif', fontSize: '18px', color: THEME.text }).setOrigin(0, 0.5);
     makeButton(this, width - 60, 36, '✕', () => this.scene.start('Menu'), { fontSize: '26px' });
 
     if (this.loadState === 'loading') {
@@ -71,16 +63,7 @@ export class PlansScene extends Phaser.Scene {
       return;
     }
 
-    let y = 110;
-    if (this.subscriptionEndsAt && new Date(this.subscriptionEndsAt) > new Date()) {
-      this.add
-        .text(width / 2, y, `${t('alreadyActive', lang)} ${new Date(this.subscriptionEndsAt).toLocaleDateString()}`, {
-          fontFamily: 'sans-serif', fontSize: '16px', color: THEME.accent, backgroundColor: '#fff3e0', padding: { x: 12, y: 6 },
-        })
-        .setOrigin(0.5);
-      y += 44;
-    }
-
+    let y = 100;
     if (this.plans.length === 0) {
       this.add.text(width / 2, y + 40, t('planUnavailable', lang), { fontFamily: 'sans-serif', fontSize: '18px', color: THEME.subtleText }).setOrigin(0.5);
       return;
@@ -91,7 +74,8 @@ export class PlansScene extends Phaser.Scene {
     }
 
     for (const plan of this.plans) {
-      this.add.text(40, y, plan.name + (plan.badge ? ` (${plan.badge})` : ''), { fontFamily: 'sans-serif', fontSize: '20px', color: THEME.text }).setOrigin(0, 0.5);
+      const title = `🪙 ${plan.coins} Coins` + (plan.badge ? ` (${plan.badge})` : '');
+      this.add.text(40, y, title, { fontFamily: 'sans-serif', fontSize: '20px', color: THEME.text }).setOrigin(0, 0.5);
       this.add.text(40, y + 22, plan.perks.join(' · '), { fontFamily: 'sans-serif', fontSize: '13px', color: THEME.subtleText }).setOrigin(0, 0.5);
 
       const label =
@@ -114,7 +98,7 @@ export class PlansScene extends Phaser.Scene {
 
     if (plan.pay_mode === 'free') {
       try {
-        await claimFreePlan(plan.id);
+        grantOrderOnce(await claimFreePlan(plan.id));
         await this.loadPlans();
       } catch (err) {
         const lang = loadProfile().language;
@@ -127,8 +111,9 @@ export class PlansScene extends Phaser.Scene {
     const result = await buyPlan(plan.id);
     const lang = loadProfile().language;
     if (result.outcome === 'success') {
+      grantOrderOnce(result.order);
       await this.loadPlans();
-      this.showResultModal(`${t('paymentSuccess', lang)}\n${plan.name} — ${t('alreadyActive', lang)} ${result.order.paid_at ? new Date(result.order.paid_at).toLocaleDateString() : ''}`);
+      this.showResultModal(`${t('paymentSuccess', lang)}\n+${result.order.coins} 🪙 ${plan.name}`);
     } else if (result.outcome === 'pending') {
       this.showResultModal(`${t('paymentPending', lang)}\n\n${t('reference', lang)}: ${result.order.reference}\nUTR: ${result.order.utr ?? '-'}`, result.order);
     } else if (result.outcome === 'failed') {

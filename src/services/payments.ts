@@ -1,6 +1,23 @@
 import { getSupabase } from './supabaseClient';
 import { Upi } from './upiPlugin';
 import { APP_NAME } from '../config/app.config';
+import { grantLocally } from './billing/verifyPurchase';
+import { loadJson, saveJson } from './storage';
+
+// A UPI order's coins are credited to the local wallet (the game's economy lives in
+// localStorage, not server-side) exactly once per order id — tracked here so re-viewing
+// Payment History, or a 'pending' order later turning into 'success' on manual review,
+// never double-grants.
+const GRANTED_KEY = 'upiGrantedOrderIds';
+
+/** Grants an order's coins locally if (and only if) this order id hasn't been granted before. */
+export function grantOrderOnce(order: PaymentOrder): void {
+  if (order.status !== 'success' || order.coins <= 0) return;
+  const granted = loadJson<string[]>(GRANTED_KEY, []);
+  if (granted.includes(order.id)) return;
+  grantLocally(order.coins, 0);
+  saveJson(GRANTED_KEY, [...granted, order.id]);
+}
 
 export interface Plan {
   id: number;
@@ -8,6 +25,7 @@ export interface Plan {
   name: string;
   price_paise: number;
   duration_days: number;
+  coins: number;
   perks: string[];
   badge: string | null;
   sort: number;
@@ -20,6 +38,7 @@ export interface PaymentOrder {
   plan_code: string;
   plan_name: string;
   duration_days: number;
+  coins: number;
   amount_paise: number;
   reference: string;
   status: 'initiated' | 'pending' | 'success' | 'failed' | 'cancelled' | 'revoked';
@@ -41,7 +60,7 @@ export type PayResult =
 export async function plansForMe(): Promise<Plan[]> {
   const supabase = getSupabase();
   if (!supabase) return [];
-  const { data, error } = await supabase.rpc('plans_for_me');
+  const { data, error } = await supabase.rpc('plans_for_me_v2');
   if (error) throw error;
   return data as Plan[];
 }

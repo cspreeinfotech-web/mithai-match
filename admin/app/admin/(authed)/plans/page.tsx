@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createPlan, updatePlan } from './actions';
 
 type Plan = {
-  id: number; code: string; name: string; price_paise: number; duration_days: number;
+  id: number; code: string; name: string; price_paise: number; duration_days: number; coins: number;
   active: boolean; sort: number; perks: string[]; badge: string | null; free_eligible: boolean;
 };
 
@@ -19,7 +19,7 @@ export default async function PlansPage() {
 
       <div className="mb-8 space-y-4">
         {plans.map((plan) => (
-          <form key={plan.id} action={updatePlan.bind(null, plan.id)} className="grid grid-cols-7 items-end gap-2 rounded-lg border border-orange-200 bg-white p-4">
+          <form key={plan.id} action={updatePlan.bind(null, plan.id)} className="grid grid-cols-8 items-end gap-2 rounded-lg border border-orange-200 bg-white p-4">
             <div className="col-span-2">
               <label className="block text-xs text-stone-500">Name ({plan.code})</label>
               <input name="name" defaultValue={plan.name} required className="w-full rounded border border-stone-300 p-1 text-sm" />
@@ -29,8 +29,12 @@ export default async function PlansPage() {
               <input name="price_rupees" type="number" step="0.01" defaultValue={plan.price_paise / 100} required className="w-full rounded border border-stone-300 p-1 text-sm" />
             </div>
             <div>
-              <label className="block text-xs text-stone-500">Days</label>
-              <input name="duration_days" type="number" defaultValue={plan.duration_days} required className="w-full rounded border border-stone-300 p-1 text-sm" />
+              <label className="block text-xs text-stone-500">Coins</label>
+              <input name="coins" type="number" defaultValue={plan.coins} className="w-full rounded border border-stone-300 p-1 text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs text-stone-500">Days (0 = no subscription)</label>
+              <input name="duration_days" type="number" defaultValue={plan.duration_days} className="w-full rounded border border-stone-300 p-1 text-sm" />
             </div>
             <div className="col-span-2">
               <label className="block text-xs text-stone-500">Perks (comma-separated)</label>
@@ -56,7 +60,7 @@ export default async function PlansPage() {
       </div>
 
       <h2 className="mb-3 font-medium">New plan</h2>
-      <form action={createPlan} className="grid grid-cols-7 items-end gap-2 rounded-lg border border-orange-200 bg-white p-4">
+      <form action={createPlan} className="grid grid-cols-8 items-end gap-2 rounded-lg border border-orange-200 bg-white p-4">
         <div>
           <label className="block text-xs text-stone-500">Code</label>
           <input name="code" required className="w-full rounded border border-stone-300 p-1 text-sm" />
@@ -70,8 +74,12 @@ export default async function PlansPage() {
           <input name="price_rupees" type="number" step="0.01" required className="w-full rounded border border-stone-300 p-1 text-sm" />
         </div>
         <div>
-          <label className="block text-xs text-stone-500">Days</label>
-          <input name="duration_days" type="number" required className="w-full rounded border border-stone-300 p-1 text-sm" />
+          <label className="block text-xs text-stone-500">Coins</label>
+          <input name="coins" type="number" required className="w-full rounded border border-stone-300 p-1 text-sm" />
+        </div>
+        <div>
+          <label className="block text-xs text-stone-500">Days (0 = none)</label>
+          <input name="duration_days" type="number" defaultValue={0} className="w-full rounded border border-stone-300 p-1 text-sm" />
         </div>
         <div className="col-span-2">
           <label className="block text-xs text-stone-500">Perks</label>

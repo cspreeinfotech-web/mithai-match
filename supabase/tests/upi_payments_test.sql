@@ -18,7 +18,7 @@ do $$
 declare v_order_id uuid; v_reference text; v_result jsonb; v_plan_id bigint; v_price bigint;
 begin
   perform set_config('request.jwt.claims', json_build_object('sub', '11111111-1111-1111-1111-111111111111', 'role', 'authenticated')::text, true);
-  select id, price_paise into v_plan_id, v_price from public.plans where code = 'trial';
+  select id, price_paise into v_plan_id, v_price from public.plans where code = 'coins_100';
 
   -- 1. reference mismatch -> pending, not success
   v_result := public.create_payment_order(v_plan_id);
@@ -92,7 +92,7 @@ do $$
 declare v_order_id uuid; v_reference text; v_utr text := 'REVOKETEST01'; v_result jsonb; v_plan_id bigint;
 begin
   perform set_config('request.jwt.claims', json_build_object('sub', '11111111-1111-1111-1111-111111111111', 'role', 'authenticated')::text, true);
-  select id into v_plan_id from public.plans where code = 'trial';
+  select id into v_plan_id from public.plans where code = 'coins_100';
   update public.payment_orders set status = 'initiated', created_at = now() where user_id = '11111111-1111-1111-1111-111111111111' and status = 'pending';
   v_result := public.create_payment_order(v_plan_id);
   v_order_id := (v_result->>'order_id')::uuid;
@@ -144,7 +144,7 @@ do $$
 declare v_plan_id bigint; v_original_price bigint; v_order_id uuid; v_result jsonb; v_snapshot_amount bigint;
 begin
   perform set_config('request.jwt.claims', json_build_object('sub', '22222222-2222-2222-2222-222222222222', 'role', 'authenticated')::text, true);
-  select id, price_paise into v_plan_id, v_original_price from public.plans where code = 'monthly';
+  select id, price_paise into v_plan_id, v_original_price from public.plans where code = 'coins_550';
 
   perform set_config('request.jwt.claims', json_build_object('sub', '33333333-3333-3333-3333-333333333333', 'role', 'authenticated')::text, true);
   v_result := public.create_payment_order(v_plan_id);
@@ -152,7 +152,7 @@ begin
   select amount_paise into v_snapshot_amount from public.payment_orders where id = v_order_id;
 
   perform set_config('request.jwt.claims', json_build_object('sub', '22222222-2222-2222-2222-222222222222', 'role', 'authenticated')::text, true);
-  perform public.admin_update_plan(v_plan_id, 'Monthly', v_original_price * 2, 30, array['x'], null, true, 2, false);
+  perform public.admin_update_plan(v_plan_id, '550 Coins', v_original_price * 2, 0, array['x'], null, true, 2, false);
 
   if (select amount_paise from public.payment_orders where id = v_order_id) <> v_snapshot_amount then
     raise exception 'TEST FAILED: an open order''s amount must not change when the plan price changes';
