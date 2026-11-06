@@ -146,9 +146,13 @@ const SWEET_DRAWERS: Record<SweetType, (g: Phaser.GameObjects.Graphics) => void>
 };
 
 export function generateGameTextures(scene: Phaser.Scene): void {
-  if (scene.textures.exists(SWEET_TEXTURE_KEY('laddu'))) return; // already generated this session
+  // TILE_BG_TEXTURE_KEY (not a sweet) is always procedural, so it's a safe "ran this
+  // session" guard — unlike a sweet key, which may already exist from BootScene's preload
+  // of the real illustrated art (see BootScene.ts) rather than from a prior run of this fn.
+  if (scene.textures.exists(TILE_BG_TEXTURE_KEY)) return;
 
   for (const [sweet, draw] of Object.entries(SWEET_DRAWERS) as [SweetType, (g: Phaser.GameObjects.Graphics) => void][]) {
+    if (scene.textures.exists(SWEET_TEXTURE_KEY(sweet))) continue; // preloaded illustrated art takes priority
     soften(scene, SWEET_TEXTURE_KEY(sweet), draw);
   }
 
