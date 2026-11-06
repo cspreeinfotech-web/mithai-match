@@ -16,7 +16,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run build
+      - run: npm run build:mock
         env:
           # Optional — unset until the Supabase project exists (see MANUAL_STEPS.md). The
           # app runs fully offline without them.

@@ -9,7 +9,7 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     document.title = APP_NAME;
-    sound.startMusic(); // see src/services/sound.ts — silent placeholder until real music exists
+    sound.startMusic();
     this.scene.start('Menu');
   }
 }
